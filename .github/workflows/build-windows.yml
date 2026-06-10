@@ -1,0 +1,159 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [main, develop, "release/**"]
+    paths-ignore:
+      - "*.md"
+      - "docs/**"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build type"
+        required: false
+        default: "Release"
+        type: choice
+        options: [Release, Debug, RelWithDebInfo]
+
+env:
+  BUILD_TYPE: ${{ github.event.inputs.build_type || 'Release' }}
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+
+jobs:
+  # ── Build Windows x64 ─────────────────────────────────────────────────────
+  build-windows-x64:
+    name: "Windows x64 (${{ github.event.inputs.build_type || 'Release' }})"
+    runs-on: windows-2022
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      # ── Cache: vcpkg ──────────────────────────────────────────────────────
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.VCPKG_ROOT }}
+            ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-windows-x64-${{ hashFiles('vcpkg.json') }}-v2
+          restore-keys: vcpkg-windows-x64-
+
+      # ── Install vcpkg ─────────────────────────────────────────────────────
+      - name: Install vcpkg
+        shell: pwsh
+        run: |
+          if (!(Test-Path "$env:VCPKG_ROOT")) {
+            git clone https://github.com/microsoft/vcpkg.git "$env:VCPKG_ROOT"
+            & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat" -disableMetrics
+          } else {
+            Write-Host "vcpkg already cached"
+          }
+
+      # ── Install Qt6 ───────────────────────────────────────────────────────
+      - name: Install Qt6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: "6.6.2"
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          modules: "qtmultimedia qtnetwork"
+          cache: true
+
+      # ── Install Vulkan SDK ─────────────────────────────────────────────────
+      - name: Install Vulkan SDK
+        shell: pwsh
+        run: |
+          $url = "https://sdk.lunarg.com/sdk/download/1.3.275.0/windows/VulkanSDK-1.3.275.0-Installer.exe"
+          $out = "$env:TEMP\VulkanSDK.exe"
+          Invoke-WebRequest -Uri $url -OutFile $out
+          Start-Process -FilePath $out -Args "--accept-licenses --default-answer --confirm-command install" -Wait
+          echo "VULKAN_SDK=C:\VulkanSDK\1.3.275.0" | Out-File -Append $env:GITHUB_ENV
+          echo "C:\VulkanSDK\1.3.275.0\Bin" | Out-File -Append $env:GITHUB_PATH
+
+      # ── Install FFmpeg (vcpkg) ────────────────────────────────────────────
+      - name: Install FFmpeg via vcpkg
+        shell: pwsh
+        run: |
+          mkdir -p "$env:VCPKG_DEFAULT_BINARY_CACHE" -Force
+          & "$env:VCPKG_ROOT\vcpkg.exe" install `
+            ffmpeg[core,avcodec,avformat,avutil,swscale,swresample,gpl,nonfree]:x64-windows `
+            --triplet x64-windows
+
+      # ── Configure CMake ───────────────────────────────────────────────────
+      - name: Configure CMake
+        shell: pwsh
+        run: |
+          cmake -B build `
+            -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows `
+            -DAURORA_BUILD_DESKTOP=ON `
+            -DAURORA_BUILD_TESTS=ON `
+            -DAURORA_USE_VULKAN=ON `
+            -DAURORA_USE_DX11=ON `
+            -DFFMPEG_PREFIX="$env:VCPKG_ROOT/installed/x64-windows" `
+            -DQt6_DIR="$env:Qt6_DIR" `
+            -DVULKAN_SDK="$env:VULKAN_SDK"
+
+      # ── Build ─────────────────────────────────────────────────────────────
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake --build build `
+            --config $env:BUILD_TYPE `
+            --parallel $env:NUMBER_OF_PROCESSORS `
+            -- /verbosity:minimal /nologo
+
+      # ── Run Tests ─────────────────────────────────────────────────────────
+      - name: Run Tests
+        shell: pwsh
+        working-directory: build
+        run: ctest -C $env:BUILD_TYPE --output-on-failure --timeout 60
+
+      # ── Package Installer ─────────────────────────────────────────────────
+      - name: Package with WiX / NSIS
+        if: ${{ env.BUILD_TYPE == 'Release' }}
+        shell: pwsh
+        run: |
+          # windeployqt
+          $exe = "build\bin\$env:BUILD_TYPE\AuroraPlayer.exe"
+          if (Test-Path $exe) {
+            & "$env:Qt6_DIR\..\..\..\bin\windeployqt.exe" `
+              --release --no-translations $exe
+          }
+          # Create ZIP package
+          $ver = "1.0.0"
+          $pkg = "AuroraPlayer-${ver}-win64"
+          New-Item -ItemType Directory -Force "$pkg"
+          Copy-Item "build\bin\$env:BUILD_TYPE\*" "$pkg\" -Recurse -Force
+          Compress-Archive -Path "$pkg" -DestinationPath "${pkg}.zip" -Force
+          echo "PACKAGE_PATH=${pkg}.zip" | Out-File -Append $env:GITHUB_ENV
+
+      # ── Upload artifact ───────────────────────────────────────────────────
+      - name: Upload Windows Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuroraPlayer-Windows-x64-${{ env.BUILD_TYPE }}
+          path: |
+            AuroraPlayer-*.zip
+            build/bin/${{ env.BUILD_TYPE }}/AuroraPlayer.exe
+          retention-days: 30
+
+      # ── Upload test results ────────────────────────────────────────────────
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults-Windows-x64
+          path: build/Testing/**/*.xml
+          retention-days: 7

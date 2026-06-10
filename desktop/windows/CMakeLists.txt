@@ -1,0 +1,92 @@
+cmake_minimum_required(VERSION 3.25)
+
+find_package(Qt6 REQUIRED COMPONENTS
+    Core Gui Widgets Multimedia Network Concurrent Svg OpenGL
+)
+qt_standard_project_setup()
+
+set(AURORA_SOURCES
+    src/main.cpp
+    src/MainWindow.cpp
+    src/MainWindow.h
+    src/PlayerWidget.cpp
+    src/PlayerWidget.h
+    src/PlaylistWidget.cpp
+    src/PlaylistWidget.h
+    src/ControlBar.cpp
+    src/ControlBar.h
+    src/SettingsDialog.cpp
+    src/SettingsDialog.h
+    src/AISettingsPanel.cpp
+    src/AISettingsPanel.h
+    src/BenchmarkOverlay.cpp
+    src/BenchmarkOverlay.h
+    src/SubtitleOverlay.cpp
+    src/SubtitleOverlay.h
+    src/ThumbnailBar.cpp
+    src/ThumbnailBar.h
+    src/AuroraApplication.cpp
+    src/AuroraApplication.h
+)
+
+# Windows application
+qt_add_executable(AuroraPlayer WIN32
+    ${AURORA_SOURCES}
+    resources/aurora.rc
+)
+
+target_include_directories(AuroraPlayer PRIVATE
+    src
+    ${CMAKE_SOURCE_DIR}/core
+    ${CMAKE_SOURCE_DIR}
+)
+
+target_link_libraries(AuroraPlayer PRIVATE
+    aurora_core
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Multimedia
+    Qt6::Network
+    Qt6::Concurrent
+    Qt6::Svg
+    Qt6::OpenGL
+)
+
+# Windows-specific
+if(WIN32)
+    target_link_libraries(AuroraPlayer PRIVATE
+        dwmapi
+        winmm
+        shlwapi
+        shell32
+        ole32
+        user32
+        gdi32
+    )
+    if(AURORA_USE_DX12 AND D3D12_LIB)
+        target_link_libraries(AuroraPlayer PRIVATE ${D3D12_LIB} ${DXGI_LIB})
+    endif()
+    if(AURORA_USE_DX11 AND D3D11_LIB)
+        target_link_libraries(AuroraPlayer PRIVATE ${D3D11_LIB})
+    endif()
+endif()
+
+# Set app properties
+set_target_properties(AuroraPlayer PROPERTIES
+    OUTPUT_NAME    "AuroraPlayer"
+    WIN32_EXECUTABLE ON
+)
+
+# Deploy Qt DLLs alongside executable (Windows)
+if(WIN32 AND Qt6_FOUND)
+    add_custom_command(TARGET AuroraPlayer POST_BUILD
+        COMMAND ${Qt6_DIR}/../../../bin/windeployqt
+            --no-translations
+            --no-system-d3d-compiler
+            "$<TARGET_FILE:AuroraPlayer>"
+        COMMENT "Running windeployqt..."
+    )
+endif()
+
+install(TARGETS AuroraPlayer DESTINATION bin)

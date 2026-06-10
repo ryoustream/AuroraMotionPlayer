@@ -1,0 +1,29 @@
+{
+  "name": "aurora-motion-player",
+  "version": "1.0.0",
+  "description": "AI-powered video player with real-time frame interpolation",
+  "homepage": "https://github.com/ryoustream/AuroraMotionPlayer",
+  "license": "GPL-2.0-or-later",
+  "supports": "!arm",
+  "dependencies": [
+    {
+      "name": "ffmpeg",
+      "features": [
+        "avcodec",
+        "avformat",
+        "avutil",
+        "swscale",
+        "swresample",
+        "avfilter",
+        "gpl",
+        "nonfree"
+      ]
+    },
+    "zlib",
+    "libpng",
+    "libjpeg-turbo",
+    "openssl",
+    "curl"
+  ],
+  "builtin-baseline": "2024-01-11"
+}

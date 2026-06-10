@@ -1,0 +1,161 @@
+name: Build Android
+
+on:
+  push:
+    branches: [main, develop, "release/**"]
+    paths-ignore:
+      - "*.md"
+      - "docs/**"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      build_variant:
+        description: "Build variant"
+        required: false
+        default: "release"
+        type: choice
+        options: [release, debug]
+
+env:
+  JAVA_VERSION: "17"
+  NDK_VERSION:  "26.1.10909125"
+  BUILD_VARIANT: ${{ github.event.inputs.build_variant || 'release' }}
+
+jobs:
+  # ── Build Android APK ─────────────────────────────────────────────────────
+  build-android:
+    name: "Android APK (${{ github.event.inputs.build_variant || 'release' }})"
+    runs-on: ubuntu-22.04
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      # ── JDK ───────────────────────────────────────────────────────────────
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+
+      # ── Android SDK / NDK ─────────────────────────────────────────────────
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK & CMake
+        run: |
+          echo "y" | sdkmanager \
+            "ndk;${{ env.NDK_VERSION }}" \
+            "cmake;3.25.1" \
+            "build-tools;34.0.0" \
+            "platforms;android-34" \
+            --channel=0
+
+      # ── Cache: Gradle ─────────────────────────────────────────────────────
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('mobile/android/**/*.gradle*', 'mobile/android/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+
+      # ── Cache: NDK build outputs ──────────────────────────────────────────
+      - name: Cache NDK Build
+        uses: actions/cache@v4
+        with:
+          path: mobile/android/app/.cxx
+          key: ndk-${{ env.NDK_VERSION }}-${{ hashFiles('mobile/android/app/src/main/jni/**') }}-v1
+          restore-keys: ndk-${{ env.NDK_VERSION }}-
+
+      # ── Prebuilt FFmpeg for Android ───────────────────────────────────────
+      - name: Download FFmpeg Android prebuilts
+        run: |
+          # Download pre-built FFmpeg static libs for Android (arm64-v8a + x86_64)
+          FFMPEG_VER="6.1-android"
+          FFMPEG_URL="https://github.com/arthenica/ffmpeg-kit/releases/download/v6.0/ffmpeg-kit-full-6.0-android.aar"
+          # For CI we use a lightweight placeholder; full build uses actual prebuilts
+          mkdir -p mobile/android/app/src/main/jni/ffmpeg/arm64-v8a
+          mkdir -p mobile/android/app/src/main/jni/ffmpeg/x86_64
+          echo "FFmpeg dirs prepared (prebuilts needed at build time)"
+
+      # ── Download NCNN Android prebuilts ──────────────────────────────────
+      - name: Download NCNN Android prebuilts
+        run: |
+          NCNN_VER="20240102"
+          NCNN_URL="https://github.com/Tencent/ncnn/releases/download/${NCNN_VER}/ncnn-${NCNN_VER}-android-vulkan.zip"
+          curl -L "$NCNN_URL" -o ncnn-android.zip
+          unzip -q ncnn-android.zip -d ncnn-unzip
+          # Place into expected paths
+          for ABI in arm64-v8a x86_64; do
+            SRC="ncnn-unzip/ncnn-${NCNN_VER}-android-vulkan/${ABI}"
+            DST="mobile/android/app/src/main/jni/ncnn/${ABI}"
+            mkdir -p "$DST"
+            if [ -d "$SRC" ]; then
+              cp -r "$SRC"/* "$DST/"
+            fi
+          done
+          echo "NCNN prebuilts placed"
+
+      # ── Grant Gradle execute permission ──────────────────────────────────
+      - name: Grant execute permission for gradlew
+        working-directory: mobile/android
+        run: chmod +x gradlew
+
+      # ── Build APK ─────────────────────────────────────────────────────────
+      - name: Build APK
+        working-directory: mobile/android
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
+        run: |
+          if [ "${{ env.BUILD_VARIANT }}" = "release" ]; then
+            ./gradlew assembleRelease \
+              --no-daemon \
+              --stacktrace \
+              -Pandroid.injected.signing.store.file="" \
+              2>&1 | tee build.log
+          else
+            ./gradlew assembleDebug \
+              --no-daemon \
+              --stacktrace \
+              2>&1 | tee build.log
+          fi
+
+      # ── Upload APK artifact ────────────────────────────────────────────────
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuroraPlayer-Android-${{ env.BUILD_VARIANT }}
+          path: |
+            mobile/android/app/build/outputs/apk/**/*.apk
+            mobile/android/app/build/outputs/apk/**/*.aab
+          retention-days: 30
+
+      # ── Upload build log on failure ────────────────────────────────────────
+      - name: Upload Build Log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: BuildLog-Android
+          path: mobile/android/build.log
+          retention-days: 7
+
+      # ── Lint ──────────────────────────────────────────────────────────────
+      - name: Run Android Lint
+        working-directory: mobile/android
+        run: ./gradlew lint --no-daemon
+
+      - name: Upload Lint Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LintReport-Android
+          path: mobile/android/app/build/reports/lint-results*.html
+          retention-days: 7

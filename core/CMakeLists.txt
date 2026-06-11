@@ -33,6 +33,8 @@ add_library(aurora_core STATIC
     renderer/RendererBase.cpp
     renderer/VulkanRenderer.cpp
     renderer/OpenGLRenderer.cpp
+    renderer/DX11Renderer.cpp
+    renderer/RendererFactory.cpp
 
     # Interpolation
     interpolation/AuroraFlow.cpp
@@ -106,4 +108,15 @@ endif()
 if(LIBPLACEBO_FOUND)
     target_link_libraries(aurora_core PUBLIC PkgConfig::LIBPLACEBO)
     target_compile_definitions(aurora_core PUBLIC AURORA_LIBPLACEBO=1)
+endif()
+
+
+if(AURORA_USE_DX11)
+    target_compile_definitions(aurora_core PUBLIC AURORA_DX11=1)
+endif()
+
+# Compile GLSL → SPIR-V
+if(AURORA_USE_VULKAN)
+    add_subdirectory(renderer/shaders)
+    add_dependencies(aurora_core aurora_shaders)
 endif()

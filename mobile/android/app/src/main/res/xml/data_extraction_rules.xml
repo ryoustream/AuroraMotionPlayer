@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Extraction rules for Android 12+ cloud backup.
+    Exclude playback history and cache from backup.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="." />
+        <exclude domain="database" path="playback_history.db" />
+        <exclude domain="cache" path="." />
+        <exclude domain="external-cache" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="." />
+        <include domain="database" path="bookmarks.db" />
+        <exclude domain="cache" path="." />
+    </device-transfer>
+</data-extraction-rules>

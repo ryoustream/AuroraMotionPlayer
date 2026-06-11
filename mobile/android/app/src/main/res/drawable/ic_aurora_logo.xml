@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#0A0E1A"
+        android:pathData="M54,54m-54,0a54,54 0,1 1,108 0a54,54 0,1 1,-108 0" />
+
+    <!-- Aurora wave -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M18,64 Q30,44 42,54 Q54,64 66,44 Q78,24 90,44"
+        android:strokeColor="#4FACDE"
+        android:strokeLineCap="round"
+        android:strokeWidth="4" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M18,70 Q30,52 42,60 Q54,68 66,50 Q78,32 90,50"
+        android:strokeColor="#7EDCA8"
+        android:strokeLineCap="round"
+        android:strokeWidth="3" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M18,76 Q30,60 42,66 Q54,72 66,56 Q78,40 90,56"
+        android:strokeColor="#A855F7"
+        android:strokeLineCap="round"
+        android:strokeWidth="2" />
+
+    <!-- Play triangle -->
+    <path
+        android:fillColor="#F9FAFB"
+        android:pathData="M45,38 L45,70 L72,54 Z" />
+
+</vector>

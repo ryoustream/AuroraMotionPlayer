@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Aurora brand palette -->
+    <color name="aurora_deep_space">#0A0E1A</color>
+    <color name="aurora_void">#060910</color>
+    <color name="aurora_surface">#111827</color>
+    <color name="aurora_surface_variant">#1F2937</color>
+    <color name="aurora_outline">#374151</color>
+
+    <!-- Accent: Aurora borealis inspired -->
+    <color name="aurora_primary">#4FACDE</color>       <!-- ice blue -->
+    <color name="aurora_primary_variant">#2D8BB5</color>
+    <color name="aurora_secondary">#7EDCA8</color>     <!-- aurora green -->
+    <color name="aurora_tertiary">#A855F7</color>      <!-- purple highlight -->
+
+    <!-- Text -->
+    <color name="aurora_on_surface">#F9FAFB</color>
+    <color name="aurora_on_surface_secondary">#9CA3AF</color>
+    <color name="aurora_on_surface_disabled">#4B5563</color>
+
+    <!-- Semantic -->
+    <color name="aurora_error">#EF4444</color>
+    <color name="aurora_warning">#F59E0B</color>
+    <color name="aurora_success">#10B981</color>
+
+    <!-- Player overlay -->
+    <color name="player_overlay_bg">#B3000000</color>  <!-- 70% black -->
+    <color name="player_control_tint">#FFFFFFFF</color>
+    <color name="player_progress_track">#4DFFFFFF</color>
+    <color name="player_progress_buffered">#80FFFFFF</color>
+    <color name="player_progress_played">#4FACDE</color>
+
+    <!-- System (required by Material / AppCompat) -->
+    <color name="colorPrimary">@color/aurora_primary</color>
+    <color name="colorPrimaryVariant">@color/aurora_primary_variant</color>
+    <color name="colorOnPrimary">@color/aurora_void</color>
+    <color name="colorSecondary">@color/aurora_secondary</color>
+    <color name="colorOnSecondary">@color/aurora_void</color>
+    <color name="colorSurface">@color/aurora_surface</color>
+    <color name="colorOnSurface">@color/aurora_on_surface</color>
+    <color name="colorBackground">@color/aurora_deep_space</color>
+    <color name="colorOnBackground">@color/aurora_on_surface</color>
+    <color name="colorError">@color/aurora_error</color>
+    <color name="colorOnError">#FFFFFF</color>
+</resources>

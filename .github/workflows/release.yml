@@ -1,14 +1,15 @@
-name: Release
+name: 🚀 Release
 
 on:
   push:
     tags:
-      - "v*.*.*"     # e.g. v1.0.0, v1.2.3-beta
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
       version:
         description: "Release version (e.g. 1.0.0)"
         required: true
+        type: string
       prerelease:
         description: "Is pre-release?"
         type: boolean
@@ -18,9 +19,9 @@ permissions:
   contents: write
 
 jobs:
-  # ── Determine version ────────────────────────────────────────────────────
+  # ── Determine version ─────────────────────────────────────────────────────
   prepare:
-    name: Prepare Release
+    name: "📋 Prepare Release"
     runs-on: ubuntu-22.04
     outputs:
       version: ${{ steps.ver.outputs.version }}
@@ -36,71 +37,105 @@ jobs:
           fi
           echo "version=$VER" >> $GITHUB_OUTPUT
           echo "tag=v$VER"    >> $GITHUB_OUTPUT
-          echo "Version: $VER"
+          echo "✓ Version: $VER"
 
-  # ── Build Windows ─────────────────────────────────────────────────────────
+  # ── Windows Build ─────────────────────────────────────────────────────────
   build-windows:
-    name: Build Windows x64
+    name: "🪟 Build Windows x64"
     needs: prepare
     uses: ./.github/workflows/build-windows.yml
     with:
-      build_type: Release
+      build_type: "Release"
 
-  # ── Build Android ─────────────────────────────────────────────────────────
+  # ── Android Build ─────────────────────────────────────────────────────────
   build-android:
-    name: Build Android
+    name: "🤖 Build Android"
     needs: prepare
     uses: ./.github/workflows/build-android.yml
     with:
-      build_variant: release
+      build_variant: "release"
 
-  # ── Create GitHub Release ─────────────────────────────────────────────────
-  release:
-    name: Publish Release
+  # ── Publish Release ───────────────────────────────────────────────────────
+  publish:
+    name: "📦 Publish GitHub Release"
     runs-on: ubuntu-22.04
     needs: [prepare, build-windows, build-android]
 
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
 
-      # Download all build artifacts
-      - uses: actions/download-artifact@v4
+      # Download all artifacts from both build jobs
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          path: release-artifacts
+          path: artifacts/
 
       - name: List artifacts
-        run: find release-artifacts -type f | sort
+        run: find artifacts/ -type f | sort
 
-      # Rename artifacts with version
-      - name: Prepare release assets
+      # Rename & stage release assets
+      - name: Stage release assets
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          mkdir -p dist
-          # Windows
-          find release-artifacts -name "*.zip" -exec cp {} "dist/AuroraPlayer-${VERSION}-win64.zip" \;
+          mkdir -p dist/
+
+          # Windows ZIP
+          WIN_ZIP=$(find artifacts/ -name "*.zip" | head -1)
+          if [ -n "$WIN_ZIP" ]; then
+            cp "$WIN_ZIP" "dist/AuroraPlayer-${VERSION}-win64.zip"
+            echo "✓ Windows: AuroraPlayer-${VERSION}-win64.zip"
+          fi
+
           # Android APK
-          find release-artifacts -name "*.apk" -exec cp {} "dist/AuroraPlayer-${VERSION}.apk" \;
+          APK=$(find artifacts/ -name "*.apk" | head -1)
+          if [ -n "$APK" ]; then
+            cp "$APK" "dist/AuroraPlayer-${VERSION}.apk"
+            echo "✓ Android: AuroraPlayer-${VERSION}.apk"
+          fi
+
+          # Android AAB (if produced)
+          AAB=$(find artifacts/ -name "*.aab" | head -1)
+          if [ -n "$AAB" ]; then
+            cp "$AAB" "dist/AuroraPlayer-${VERSION}.aab"
+            echo "✓ Android bundle: AuroraPlayer-${VERSION}.aab"
+          fi
+
+          echo "=== Release assets ==="
           ls -lh dist/
 
-      # Generate changelog from git log
-      - name: Generate Changelog
+      # Generate changelog from git history
+      - name: Generate changelog
         id: changelog
         run: |
-          git log --oneline --no-merges $(git describe --tags --abbrev=0 HEAD^)..HEAD \
-            | sed 's/^/- /' > CHANGES.md || echo "- Initial release" > CHANGES.md
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            git log --oneline --no-merges "${PREV_TAG}..HEAD" | sed 's/^/- /' > CHANGES.md
+          else
+            echo "- Initial release of Aurora Motion Player" > CHANGES.md
+            echo "- AI frame interpolation: RIFE, IFRNet, FILM, GMFlow" >> CHANGES.md
+            echo "- AI upscaling: RealESRGAN, SPAN, Anime4K, FSRCNN" >> CHANGES.md
+            echo "- HDR10/HLG tone mapping (BT.2390, ACES, Mobius, Reinhard)" >> CHANGES.md
+            echo "- Hardware decoding: NVDEC, D3D11VA, MediaCodec" >> CHANGES.md
+            echo "- Subtitle: SRT, ASS, VTT, PGS" >> CHANGES.md
+            echo "- Streaming: HLS, DASH, RTMP, RTSP" >> CHANGES.md
+          fi
           cat CHANGES.md
 
       # Create GitHub Release
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name:   ${{ needs.prepare.outputs.tag }}
-          name:       "Aurora Motion Player ${{ needs.prepare.outputs.version }}"
-          prerelease: ${{ github.event.inputs.prerelease || false }}
-          body_path:  CHANGES.md
+          tag_name:         ${{ needs.prepare.outputs.tag }}
+          name:             "Aurora Motion Player ${{ needs.prepare.outputs.version }}"
+          prerelease:       ${{ github.event.inputs.prerelease || false }}
+          body_path:        CHANGES.md
+          generate_release_notes: false
           files: |
             dist/AuroraPlayer-*.zip
             dist/AuroraPlayer-*.apk
+            dist/AuroraPlayer-*.aab
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

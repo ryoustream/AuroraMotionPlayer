@@ -1,0 +1,5 @@
+# This file is a placeholder. The actual gradle-wrapper.jar must be downloaded
+# by running: gradle wrapper --gradle-version=8.4
+# OR by running: ./gradlew (which will bootstrap itself using the properties above)
+#
+# In CI, the 'gradle/actions/setup-gradle' action handles this automatically.

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backup rules for Android 11 and below (uses BackupAgentHelper).
+-->
+<full-backup-content>
+    <include domain="sharedpref" path="." />
+    <include domain="database" path="bookmarks.db" />
+    <exclude domain="database" path="playback_history.db" />
+    <exclude domain="cache" path="." />
+    <exclude domain="external" path="." />
+</full-backup-content>

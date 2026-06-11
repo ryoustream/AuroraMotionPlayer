@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+        Aurora Player needs cleartext for legacy protocols:
+        RTSP, RTMP, SMB, FTP, HTTP streams.
+        HTTPS is preferred when available.
+    -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Pin HTTPS for our own update server if used -->
+    <!-- <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">aurora-player.app</domain>
+    </domain-config> -->
+</network-security-config>

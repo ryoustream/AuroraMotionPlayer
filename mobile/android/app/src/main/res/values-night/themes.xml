@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Aurora is always dark — night theme is identical to default -->
+    <style name="Theme.AuroraPlayer" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/aurora_primary</item>
+        <item name="colorSurface">@color/aurora_surface</item>
+        <item name="android:colorBackground">@color/aurora_deep_space</item>
+        <item name="android:windowBackground">@color/aurora_deep_space</item>
+        <item name="android:statusBarColor">@color/aurora_void</item>
+        <item name="android:navigationBarColor">@color/aurora_void</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

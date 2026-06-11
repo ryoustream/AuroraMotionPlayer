@@ -41,7 +41,7 @@
             android:resizeableActivity="true"
             android:screenOrientation="sensor"
             android:supportsPictureInPicture="true"
-            android:theme="@style/Theme.AuroraPlayer.Fullscreen">
+            android:theme="@style/Theme.AuroraPlayer.Player">
 
             <intent-filter android:priority="1">
                 <action android:name="android.intent.action.MAIN" />

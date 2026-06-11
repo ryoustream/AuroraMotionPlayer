@@ -75,6 +75,8 @@ public:
     void setAudioCallback(AudioCallback cb) { m_audioCb = std::move(cb); }
     void setErrorCallback(ErrorCallback cb) { m_errorCb = std::move(cb); }
 
+    void setPreferHardware(bool prefer) noexcept { m_config.hwAccel = prefer ? HWAccelType::D3D11VA : HWAccelType::None; }
+
     // Stream selection
     void selectVideoStream(int index);
     void selectAudioStream(int index);

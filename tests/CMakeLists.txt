@@ -26,6 +26,10 @@ add_executable(aurora_tests
     unit/test_MotionEstimator.cpp
     unit/test_BenchmarkSystem.cpp
     unit/test_NetworkSource.cpp
+    # Session 3
+    unit/test_PluginManager.cpp
+    unit/test_AIPipeline.cpp
+    unit/test_AudioResampler.cpp
 )
 
 target_include_directories(aurora_tests PRIVATE

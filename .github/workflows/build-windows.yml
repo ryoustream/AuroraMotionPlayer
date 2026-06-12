@@ -117,6 +117,7 @@ jobs:
             -DAURORA_BUILD_TESTS=ON `
             -DAURORA_USE_VULKAN=ON `
             -DAURORA_USE_DX11=ON `
+            -DAURORA_USE_DX12=ON `
             -DFFMPEG_PREFIX="$env:VCPKG_ROOT/installed/x64-windows" `
             -DQt6_DIR="$env:Qt6_DIR" `
             -DVULKAN_SDK="$env:VULKAN_SDK"

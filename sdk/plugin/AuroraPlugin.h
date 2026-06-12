@@ -99,6 +99,21 @@ public:
     virtual VideoFrame* run(VideoFrame* f0, VideoFrame* f1, float t) = 0;
 };
 
+// ── Subtitle filter plugin ─────────────────────────────────────────────────────
+struct SubtitleEvent {
+    int64_t     startUs  = 0;   // microseconds
+    int64_t     endUs    = 0;
+    const char* text     = nullptr;
+    const char* style    = nullptr; // ASS style string, may be null
+};
+
+class ISubtitleFilterPlugin : public IPlugin {
+public:
+    /// Called for each subtitle event; return modified copy or same pointer.
+    virtual SubtitleEvent* process(SubtitleEvent* event) = 0;
+    virtual void setParam(const char* key, const char* value) = 0;
+};
+
 } // namespace aurora::sdk
 
 // ── Plugin export macros ──────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ add_library(aurora_core STATIC
     audio/AudioBuffer.cpp
     audio/AudioEngine.cpp
     audio/AudioPassthrough.cpp
+    audio/AudioResampler.cpp
 
     # Subtitle
     subtitle/SubtitleEngine.cpp
@@ -35,6 +36,15 @@ add_library(aurora_core STATIC
     renderer/OpenGLRenderer.cpp
     renderer/DX11Renderer.cpp
     renderer/RendererFactory.cpp
+
+    # DX12 (Windows only)
+    $<$<PLATFORM_ID:Windows>:renderer/DX12Renderer.cpp>
+
+    # Plugin system
+    plugin/PluginManager.cpp
+
+    # AI Pipeline
+    pipeline/AIPipelineManager.cpp
 
     # Interpolation
     interpolation/AuroraFlow.cpp
@@ -113,6 +123,20 @@ endif()
 
 if(AURORA_USE_DX11)
     target_compile_definitions(aurora_core PUBLIC AURORA_DX11=1)
+endif()
+
+# DirectX 12 (Windows)
+if(WIN32)
+    target_link_libraries(aurora_core PUBLIC d3d12 dxgi d3dcompiler)
+    target_compile_definitions(aurora_core PUBLIC AURORA_DX12=1)
+    # WASAPI audio
+    target_link_libraries(aurora_core PUBLIC ole32 avrt)
+endif()
+
+# Android AAudio
+if(ANDROID)
+    target_link_libraries(aurora_core PUBLIC aaudio)
+    target_compile_definitions(aurora_core PUBLIC AURORA_AAUDIO=1)
 endif()
 
 # Compile GLSL → SPIR-V

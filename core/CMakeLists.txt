@@ -54,6 +54,8 @@ add_library(aurora_core STATIC
     interpolation/GMFlowInterpolator.cpp
     interpolation/MotionEstimator.cpp
     interpolation/MotionCompensator.cpp
+    interpolation/TileProcessor.cpp
+    interpolation/InterpolationPipeline.cpp
 
     # Upscaler
     upscaler/RealESRGAN.cpp

@@ -1,9 +1,14 @@
-name: 🤖 Build Android
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  Aurora Motion Player — Android Build                           ║
+# ║  Toolchain : Kotlin · JDK 17 · NDK 26 · CMake 3.25            ║
+# ║  Artifacts : AuroraPlayer-<ver>.apk / .aab                     ║
+# ╚══════════════════════════════════════════════════════════════════╝
+name: 🤖 Build · Android
 
 on:
   push:
     branches: [main, develop, "release/**"]
-    paths-ignore: ["*.md", "docs/**"]
+    paths-ignore: ["**.md", "docs/**", ".github/ISSUE_TEMPLATE/**"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -20,141 +25,203 @@ on:
         type: string
         default: "release"
 
+# ── Global env ────────────────────────────────────────────────────────────────
 env:
   JAVA_VERSION:  "17"
   NDK_VERSION:   "26.1.10909125"
+  CMAKE_VERSION: "3.25.1"
+  BUILD_TOOLS:   "34.0.0"
+  COMPILE_SDK:   "34"
+  MIN_SDK:       "30"
+  NCNN_VER:      "20240102"
+  AURORA_VER:    "1.0.0"
   BUILD_VARIANT: ${{ inputs.build_variant || github.event.inputs.build_variant || 'debug' }}
 
 jobs:
   build:
-    name: "Android APK (${{ inputs.build_variant || github.event.inputs.build_variant || 'debug' }})"
+    name: "Android APK · ${{ inputs.build_variant || github.event.inputs.build_variant || 'debug' }}"
     runs-on: ubuntu-22.04
+    timeout-minutes: 60
 
     steps:
-      # ── Checkout ──────────────────────────────────────────────────────────
-      - name: "⬇ Checkout"
+      # ─────────────────────────────────────────────────────────────────────
+      # 1. CHECKOUT
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "① Checkout"
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
-      # ── JDK ───────────────────────────────────────────────────────────────
-      - name: "☕ Setup JDK ${{ env.JAVA_VERSION }}"
+      # ─────────────────────────────────────────────────────────────────────
+      # 2. JAVA / SDK SETUP
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "② Setup JDK ${{ env.JAVA_VERSION }}"
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: gradle
 
-      # ── Android SDK / NDK ─────────────────────────────────────────────────
-      - name: "🤖 Setup Android SDK"
+      - name: "② Setup Android SDK"
         uses: android-actions/setup-android@v3
 
-      - name: "🔧 Install NDK & CMake"
+      - name: "② Install NDK · CMake · Build-tools"
         run: |
-          echo "y" | sdkmanager \
-            "ndk;${{ env.NDK_VERSION }}" \
-            "cmake;3.25.1" \
-            "build-tools;34.0.0" \
-            "platforms;android-34" \
-            --channel=0 2>&1 | tail -20
+          sdkmanager \
+            "ndk;$NDK_VERSION" \
+            "cmake;$CMAKE_VERSION" \
+            "build-tools;$BUILD_TOOLS" \
+            "platforms;android-$COMPILE_SDK" \
+            --channel=0 2>&1 | grep -v "^\[=" | tail -20
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> $GITHUB_ENV
+          echo "✓ NDK   : $NDK_VERSION"
+          echo "✓ CMake : $CMAKE_VERSION"
 
-      # ── Cache: Gradle ──────────────────────────────────────────────────────
-      - name: "🗂 Cache Gradle"
+      # ─────────────────────────────────────────────────────────────────────
+      # 3. CACHE LAYERS
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "③ Cache · Gradle"
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key:          gradle-${{ hashFiles('mobile/android/**/*.gradle*', 'mobile/android/**/gradle-wrapper.properties') }}-v2
+          key:          gradle-${{ hashFiles('mobile/android/**/*.gradle*', 'mobile/android/**/gradle-wrapper.properties') }}-v4
           restore-keys: gradle-
 
-      # ── Cache: NDK build ───────────────────────────────────────────────────
-      - name: "🗂 Cache NDK Build"
+      - name: "③ Cache · NDK build (.cxx)"
         uses: actions/cache@v4
         with:
           path: mobile/android/app/.cxx
-          key:          ndk-${{ env.NDK_VERSION }}-${{ hashFiles('mobile/android/app/src/main/jni/**') }}-v2
+          key:          ndk-${{ env.NDK_VERSION }}-${{ hashFiles('mobile/android/app/src/main/jni/**') }}-v3
           restore-keys: ndk-${{ env.NDK_VERSION }}-
 
-      # ── Download NCNN prebuilts ────────────────────────────────────────────
-      - name: "🤖 Download NCNN Android prebuilts"
+      - name: "③ Cache · NCNN prebuilts"
+        id: cache-ncnn
+        uses: actions/cache@v4
+        with:
+          path: mobile/android/app/src/main/jni/ncnn
+          key:  ncnn-${{ env.NCNN_VER }}-android-vulkan-v2
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 4. AI LIBRARY PREBUILTS
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "④ Download NCNN Android prebuilts"
+        if: steps.cache-ncnn.outputs.cache-hit != 'true'
         run: |
-          NCNN_VER="20240102"
-          NCNN_URL="https://github.com/Tencent/ncnn/releases/download/${NCNN_VER}/ncnn-${NCNN_VER}-android-vulkan.zip"
-          echo "Downloading NCNN ${NCNN_VER}..."
-          curl -L --retry 3 --retry-delay 5 "$NCNN_URL" -o ncnn-android.zip
+          URL="https://github.com/Tencent/ncnn/releases/download/${NCNN_VER}/ncnn-${NCNN_VER}-android-vulkan.zip"
+          echo "⬇ Downloading NCNN ${NCNN_VER}..."
+          curl -L --retry 3 --retry-delay 5 "$URL" -o ncnn-android.zip
           unzip -q ncnn-android.zip -d ncnn-unzip
+
           for ABI in arm64-v8a x86_64; do
             SRC="ncnn-unzip/ncnn-${NCNN_VER}-android-vulkan/${ABI}"
             DST="mobile/android/app/src/main/jni/ncnn/${ABI}"
             mkdir -p "$DST"
             if [ -d "$SRC" ]; then
-              cp -r "$SRC"/* "$DST/"
-              echo "✓ NCNN $ABI placed"
+              cp -r "$SRC"/. "$DST/"
+              echo "✓ NCNN $ABI"
             else
-              echo "⚠ NCNN $ABI not found in archive, creating stub"
+              echo "⚠ NCNN $ABI not in archive — creating stub dirs"
               mkdir -p "$DST/lib" "$DST/include"
             fi
           done
           rm -rf ncnn-android.zip ncnn-unzip
 
-      # ── Prepare FFmpeg stubs (prebuilts needed for real build) ─────────────
-      - name: "🎬 Prepare FFmpeg directories"
+      - name: "④ Prepare FFmpeg stub directories"
         run: |
+          # Real FFmpeg prebuilts would be downloaded here for a full build.
+          # Stubs allow CMake configuration to succeed during CI smoke builds.
           for ABI in arm64-v8a x86_64; do
             mkdir -p "mobile/android/app/src/main/jni/ffmpeg/${ABI}/lib"
             mkdir -p "mobile/android/app/src/main/jni/ffmpeg/${ABI}/include"
           done
-          echo "FFmpeg dirs prepared"
+          echo "✓ FFmpeg stub dirs ready"
 
-      # ── Download Gradle wrapper jar ────────────────────────────────────────
-      - name: "📦 Prepare Gradle wrapper"
+      # ─────────────────────────────────────────────────────────────────────
+      # 5. GRADLE WRAPPER
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑤ Ensure Gradle wrapper"
         working-directory: mobile/android
         run: |
           mkdir -p gradle/wrapper
           if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            echo "Downloading gradle-wrapper.jar..."
+            echo "⬇ Downloading gradle-wrapper.jar..."
             curl -sL \
               "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
-              -o gradle/wrapper/gradle-wrapper.jar --retry 3 || true
+              -o gradle/wrapper/gradle-wrapper.jar --retry 3
           fi
           chmod +x gradlew
+          echo "✓ Gradle wrapper ready"
 
-      # ── Build APK ──────────────────────────────────────────────────────────
-      - name: "🔨 Build APK (${{ env.BUILD_VARIANT }})"
+      # ─────────────────────────────────────────────────────────────────────
+      # 6. BUILD
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑥ Gradle · assemble ${{ env.BUILD_VARIANT }}"
         working-directory: mobile/android
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
         run: |
-          VARIANT="${{ env.BUILD_VARIANT }}"
-          CAP_VARIANT=$(echo "$VARIANT" | sed 's/./\U&/')
-          ./gradlew "assemble${CAP_VARIANT}" \
+          VARIANT="${BUILD_VARIANT}"
+          CAP="$(echo "$VARIANT" | sed 's/\b./\u&/')"
+
+          ./gradlew "assemble${CAP}" \
             --no-daemon \
             --stacktrace \
             --warning-mode all \
-            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m" \
-            2>&1 | tee build-android.log
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError" \
+            2>&1 | tee ../../build-android.log
 
-      # ── Lint ───────────────────────────────────────────────────────────────
-      - name: "🔍 Run Android Lint"
+      # ─────────────────────────────────────────────────────────────────────
+      # 7. LINT
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑦ Android Lint"
         working-directory: mobile/android
         run: |
           ./gradlew lint --no-daemon -q || true
+          echo "✓ Lint done (non-blocking)"
 
-      # ── Upload APK ─────────────────────────────────────────────────────────
-      - name: "⬆ Upload APK"
+      # ─────────────────────────────────────────────────────────────────────
+      # 8. SIGN APK (Release only — requires secrets)
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑧ Sign APK"
+        if: env.BUILD_VARIANT == 'release' && secrets.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64:   ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS:         ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:      ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD:    ${{ secrets.STORE_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > aurora.jks
+          APK=$(find mobile/android/app/build/outputs/apk/release -name "*.apk" | head -1)
+          if [ -n "$APK" ]; then
+            $ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner sign \
+              --ks aurora.jks \
+              --ks-key-alias "$KEY_ALIAS" \
+              --ks-pass "pass:$STORE_PASSWORD" \
+              --key-pass "pass:$KEY_PASSWORD" \
+              --out "AuroraPlayer-$AURORA_VER-signed.apk" \
+              "$APK"
+            echo "✓ APK signed"
+          else
+            echo "⚠ No release APK found to sign"
+          fi
+          rm -f aurora.jks
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 9. ARTIFACTS
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑨ Upload APK / AAB"
         uses: actions/upload-artifact@v4
         with:
           name: AuroraPlayer-Android-${{ env.BUILD_VARIANT }}
           path: |
             mobile/android/app/build/outputs/apk/**/*.apk
             mobile/android/app/build/outputs/bundle/**/*.aab
+            AuroraPlayer-*-signed.apk
           if-no-files-found: warn
           retention-days: 30
 
-      # ── Upload lint report ──────────────────────────────────────────────────
-      - name: "📊 Upload Lint Report"
+      - name: "⑨ Upload Lint report"
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -163,11 +230,29 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      # ── Upload build log on failure ─────────────────────────────────────────
-      - name: "📋 Upload Build Log (on failure)"
+      - name: "⑨ Upload build log (on failure)"
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: BuildLog-Android-${{ env.BUILD_VARIANT }}
-          path: mobile/android/build-android.log
+          path: build-android.log
           retention-days: 7
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 10. BUILD SUMMARY
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑩ Job Summary"
+        if: always()
+        run: |
+          STATUS=$( [ $? -eq 0 ] && echo "✅ Success" || echo "❌ Failed" )
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🤖 Android Build Summary
+          | Field         | Value |
+          |---|---|
+          | **Status**    | $STATUS |
+          | **Variant**   | $BUILD_VARIANT |
+          | **NDK**       | $NDK_VERSION |
+          | **Min SDK**   | Android $MIN_SDK |
+          | **Compile SDK** | Android $COMPILE_SDK |
+          | **Commit**    | ${{ github.sha }} |
+          EOF

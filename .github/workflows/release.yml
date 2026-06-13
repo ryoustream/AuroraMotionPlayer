@@ -1,3 +1,8 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  Aurora Motion Player — Release Pipeline                        ║
+# ║  Trigger : push tag v*.*.* OR manual dispatch                   ║
+# ║  Flow    : prepare → build (Win + Android) → sign → publish     ║
+# ╚══════════════════════════════════════════════════════════════════╝
 name: 🚀 Release
 
 on:
@@ -7,74 +12,103 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version (e.g. 1.0.0)"
+        description: "Version number (e.g. 1.2.0)"
         required: true
         type: string
       prerelease:
-        description: "Is pre-release?"
+        description: "Mark as pre-release?"
         type: boolean
         default: false
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
-  # ── Determine version ─────────────────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 1 — Resolve version / tag
+  # ══════════════════════════════════════════════════════════════════════════
   prepare:
-    name: "📋 Prepare Release"
+    name: "📋 Prepare · Resolve version"
     runs-on: ubuntu-22.04
+
     outputs:
-      version: ${{ steps.ver.outputs.version }}
-      tag:     ${{ steps.ver.outputs.tag }}
+      version:    ${{ steps.ver.outputs.version }}
+      tag:        ${{ steps.ver.outputs.tag }}
+      prerelease: ${{ steps.ver.outputs.prerelease }}
+
     steps:
-      - name: Resolve version
+      - name: Resolve version & tag
         id: ver
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             VER="${GITHUB_REF#refs/tags/v}"
+            PRE="false"
           else
             VER="${{ github.event.inputs.version }}"
+            PRE="${{ github.event.inputs.prerelease }}"
           fi
-          echo "version=$VER" >> $GITHUB_OUTPUT
-          echo "tag=v$VER"    >> $GITHUB_OUTPUT
-          echo "✓ Version: $VER"
 
-  # ── Windows Build ─────────────────────────────────────────────────────────
+          # Validate semver
+          if ! echo "$VER" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+            echo "❌ Invalid version: $VER"
+            exit 1
+          fi
+
+          echo "version=$VER"    >> $GITHUB_OUTPUT
+          echo "tag=v$VER"       >> $GITHUB_OUTPUT
+          echo "prerelease=$PRE" >> $GITHUB_OUTPUT
+          echo "✓ Version : $VER"
+          echo "✓ Tag     : v$VER"
+          echo "✓ Pre-rel : $PRE"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 2 — Build Windows (via reusable workflow)
+  # ══════════════════════════════════════════════════════════════════════════
   build-windows:
-    name: "🪟 Build Windows x64"
+    name: "🪟 Build · Windows x64"
     needs: prepare
     uses: ./.github/workflows/build-windows.yml
     with:
       build_type: "Release"
 
-  # ── Android Build ─────────────────────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 3 — Build Android (via reusable workflow)
+  # ══════════════════════════════════════════════════════════════════════════
   build-android:
-    name: "🤖 Build Android"
+    name: "🤖 Build · Android"
     needs: prepare
     uses: ./.github/workflows/build-android.yml
     with:
       build_variant: "release"
 
-  # ── Publish Release ───────────────────────────────────────────────────────
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 4 — Publish GitHub Release
+  # ══════════════════════════════════════════════════════════════════════════
   publish:
-    name: "📦 Publish GitHub Release"
+    name: "📦 Publish · GitHub Release"
     runs-on: ubuntu-22.04
     needs: [prepare, build-windows, build-android]
+    timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+      - name: Checkout (for changelog)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Download all artifacts from both build jobs
+      # ── Collect all build artifacts ──────────────────────────────────────
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
 
-      - name: List artifacts
-        run: find artifacts/ -type f | sort
+      - name: List downloaded artifacts
+        run: |
+          echo "=== Artifact tree ==="
+          find artifacts/ -type f | sort
 
-      # Rename & stage release assets
+      # ── Stage release assets with canonical names ─────────────────────────
       - name: Stage release assets
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
@@ -85,57 +119,103 @@ jobs:
           WIN_ZIP=$(find artifacts/ -name "*.zip" | head -1)
           if [ -n "$WIN_ZIP" ]; then
             cp "$WIN_ZIP" "dist/AuroraPlayer-${VERSION}-win64.zip"
-            echo "✓ Windows: AuroraPlayer-${VERSION}-win64.zip"
+            echo "✓ Windows : AuroraPlayer-${VERSION}-win64.zip"
+          else
+            echo "⚠ No Windows ZIP found"
           fi
 
-          # Android APK
-          APK=$(find artifacts/ -name "*.apk" | head -1)
-          if [ -n "$APK" ]; then
-            cp "$APK" "dist/AuroraPlayer-${VERSION}.apk"
-            echo "✓ Android: AuroraPlayer-${VERSION}.apk"
+          # Android signed APK (preferred) or unsigned
+          SIGNED_APK=$(find artifacts/ -name "*-signed.apk" | head -1)
+          PLAIN_APK=$(find artifacts/ -name "*.apk" | head -1)
+          SRC_APK="${SIGNED_APK:-$PLAIN_APK}"
+          if [ -n "$SRC_APK" ]; then
+            cp "$SRC_APK" "dist/AuroraPlayer-${VERSION}.apk"
+            echo "✓ Android APK : AuroraPlayer-${VERSION}.apk"
+          else
+            echo "⚠ No APK found"
           fi
 
-          # Android AAB (if produced)
+          # Android AAB (optional)
           AAB=$(find artifacts/ -name "*.aab" | head -1)
           if [ -n "$AAB" ]; then
             cp "$AAB" "dist/AuroraPlayer-${VERSION}.aab"
-            echo "✓ Android bundle: AuroraPlayer-${VERSION}.aab"
+            echo "✓ Android AAB : AuroraPlayer-${VERSION}.aab"
           fi
 
+          echo ""
           echo "=== Release assets ==="
           ls -lh dist/
 
-      # Generate changelog from git history
+      # ── Generate SHA-256 checksums ────────────────────────────────────────
+      - name: Generate checksums
+        working-directory: dist
+        run: |
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          cp SHA256SUMS.txt ../
+
+      # ── Build changelog from git log ──────────────────────────────────────
       - name: Generate changelog
-        id: changelog
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -n "$PREV_TAG" ]; then
-            git log --oneline --no-merges "${PREV_TAG}..HEAD" | sed 's/^/- /' > CHANGES.md
-          else
-            echo "- Initial release of Aurora Motion Player" > CHANGES.md
-            echo "- AI frame interpolation: RIFE, IFRNet, FILM, GMFlow" >> CHANGES.md
-            echo "- AI upscaling: RealESRGAN, SPAN, Anime4K, FSRCNN" >> CHANGES.md
-            echo "- HDR10/HLG tone mapping (BT.2390, ACES, Mobius, Reinhard)" >> CHANGES.md
-            echo "- Hardware decoding: NVDEC, D3D11VA, MediaCodec" >> CHANGES.md
-            echo "- Subtitle: SRT, ASS, VTT, PGS" >> CHANGES.md
-            echo "- Streaming: HLS, DASH, RTMP, RTSP" >> CHANGES.md
-          fi
-          cat CHANGES.md
+          {
+            echo "## Aurora Motion Player v${VERSION}"
+            echo ""
+            if [ -n "$PREV_TAG" ]; then
+              echo "### Changes since ${PREV_TAG}"
+              git log --oneline --no-merges "${PREV_TAG}..HEAD" | \
+                sed 's/^[a-f0-9]* /- /'
+            else
+              echo "### Highlights"
+              echo "- 🤖 AI frame interpolation: RIFE, IFRNet, FILM, GMFlow"
+              echo "- 🖼 AI upscaling: RealESRGAN, SPAN, Anime4K, FSRCNN (2×/4×/8×)"
+              echo "- 🎬 Hardware decoding: NVDEC, D3D11VA, Intel QSV, MediaCodec"
+              echo "- 📺 HDR10 / HLG tone mapping (BT.2390, ACES, Mobius, Reinhard)"
+              echo "- 📝 Subtitles: SRT, ASS, VTT, PGS with custom font/style"
+              echo "- 🌐 Streaming: HLS, DASH, RTMP, RTSP, SMB"
+              echo "- 🪟 Windows: Chapter widget, bookmarks, history, mini-mode"
+              echo "- 🤖 Android: PiP, background playback, MediaStore, SAF"
+            fi
+            echo ""
+            echo "### Checksums (SHA-256)"
+            echo "\`\`\`"
+            cat SHA256SUMS.txt
+            echo "\`\`\`"
+          } > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
 
-      # Create GitHub Release
+      # ── Create GitHub Release ─────────────────────────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name:         ${{ needs.prepare.outputs.tag }}
-          name:             "Aurora Motion Player ${{ needs.prepare.outputs.version }}"
-          prerelease:       ${{ github.event.inputs.prerelease || false }}
-          body_path:        CHANGES.md
+          tag_name:               ${{ needs.prepare.outputs.tag }}
+          name:                   "Aurora Motion Player v${{ needs.prepare.outputs.version }}"
+          prerelease:             ${{ needs.prepare.outputs.prerelease }}
+          body_path:              RELEASE_NOTES.md
           generate_release_notes: false
+          fail_on_unmatched_files: false
           files: |
             dist/AuroraPlayer-*.zip
             dist/AuroraPlayer-*.apk
             dist/AuroraPlayer-*.aab
-          fail_on_unmatched_files: false
+            dist/SHA256SUMS.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Release summary ───────────────────────────────────────────────────
+      - name: Release Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🚀 Release Published
+          | Field        | Value |
+          |---|---|
+          | **Version**  | v${{ needs.prepare.outputs.version }} |
+          | **Tag**      | ${{ needs.prepare.outputs.tag }} |
+          | **Pre-rel**  | ${{ needs.prepare.outputs.prerelease }} |
+          | **Commit**   | ${{ github.sha }} |
+
+          ### Assets
+          $(ls dist/ | sed 's/^/- /')
+          EOF

@@ -1,9 +1,14 @@
-name: 🪟 Build Windows
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  Aurora Motion Player — Windows x64 Build                       ║
+# ║  Toolchain : MSVC 2022 · Qt 6.6 · Vulkan SDK · vcpkg           ║
+# ║  Artifacts : AuroraPlayer-<ver>-win64.zip                       ║
+# ╚══════════════════════════════════════════════════════════════════╝
+name: 🪟 Build · Windows x64
 
 on:
   push:
     branches: [main, develop, "release/**"]
-    paths-ignore: ["*.md", "docs/**"]
+    paths-ignore: ["**.md", "docs/**", ".github/ISSUE_TEMPLATE/**"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -20,165 +25,239 @@ on:
         type: string
         default: "Release"
 
+# ── Global env ────────────────────────────────────────────────────────────────
 env:
   BUILD_TYPE:   ${{ inputs.build_type || github.event.inputs.build_type || 'Release' }}
   VCPKG_ROOT:   ${{ github.workspace }}/vcpkg
-  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg-cache
+  VCPKG_CACHE:  ${{ github.workspace }}/vcpkg-cache
+  QT_VERSION:   "6.6.2"
   VULKAN_VER:   "1.3.275.0"
+  AURORA_VER:   "1.0.0"
+
+defaults:
+  run:
+    shell: pwsh
 
 jobs:
   build:
-    name: "Windows x64 (${{ inputs.build_type || github.event.inputs.build_type || 'Release' }})"
+    name: "Windows x64 · ${{ inputs.build_type || github.event.inputs.build_type || 'Release' }}"
     runs-on: windows-2022
+    timeout-minutes: 90
 
     steps:
-      # ── Checkout ──────────────────────────────────────────────────────────
-      - name: "⬇ Checkout"
+      # ─────────────────────────────────────────────────────────────────────
+      # 1. CHECKOUT
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "① Checkout"
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
-      # ── Cache: vcpkg binary ────────────────────────────────────────────────
-      - name: "🗂 Cache vcpkg"
+      # ─────────────────────────────────────────────────────────────────────
+      # 2. CACHE LAYERS
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "② Cache · vcpkg binaries"
         uses: actions/cache@v4
         with:
           path: |
             ${{ env.VCPKG_ROOT }}
-            ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-          key:          vcpkg-win64-${{ hashFiles('vcpkg.json') }}-v3
+            ${{ env.VCPKG_CACHE }}
+          key:          vcpkg-win64-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}-v5
           restore-keys: vcpkg-win64-
 
-      # ── Install vcpkg ──────────────────────────────────────────────────────
-      - name: "📦 Bootstrap vcpkg"
-        shell: pwsh
-        run: |
-          if (-not (Test-Path $env:VCPKG_ROOT)) {
-            git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
-            & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat" -disableMetrics
-          }
-          New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
-          echo "VCPKG_EXE=$env:VCPKG_ROOT\vcpkg.exe" >> $env:GITHUB_ENV
-
-      # ── Qt6 ───────────────────────────────────────────────────────────────
-      - name: "🎨 Install Qt6"
-        uses: jurplel/install-qt-action@v3
+      - name: "② Cache · CMake build"
+        uses: actions/cache@v4
         with:
-          version:  "6.6.2"
-          host:     windows
-          target:   desktop
-          arch:     win64_msvc2019_64
-          modules:  "qtmultimedia qtnetwork"
-          cache:    true
+          path: build
+          key:          cmake-win64-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt', 'desktop/windows/CMakeLists.txt', 'core/**/*.h') }}-v3
+          restore-keys: cmake-win64-${{ env.BUILD_TYPE }}-
 
-      # ── Vulkan SDK ────────────────────────────────────────────────────────
-      - name: "🌋 Cache Vulkan SDK"
+      - name: "② Cache · Vulkan SDK"
         id: cache-vulkan
         uses: actions/cache@v4
         with:
           path: C:\VulkanSDK\${{ env.VULKAN_VER }}
-          key:  vulkan-sdk-${{ env.VULKAN_VER }}
+          key:  vulkan-sdk-${{ env.VULKAN_VER }}-v2
 
-      - name: "🌋 Install Vulkan SDK"
+      # ─────────────────────────────────────────────────────────────────────
+      # 3. TOOLS
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "③ Setup MSVC environment"
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: "③ Install Qt ${{ env.QT_VERSION }}"
+        uses: jurplel/install-qt-action@v3
+        with:
+          version:  ${{ env.QT_VERSION }}
+          host:     windows
+          target:   desktop
+          arch:     win64_msvc2019_64
+          modules:  "qtmultimedia qtnetwork qtsvg"
+          cache:    true
+          cache-key-prefix: qt-win64-${{ env.QT_VERSION }}
+
+      - name: "③ Bootstrap vcpkg"
+        run: |
+          if (-not (Test-Path $env:VCPKG_ROOT)) {
+            git clone --depth=1 https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
+          }
+          & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat" -disableMetrics
+          New-Item -ItemType Directory -Force $env:VCPKG_CACHE | Out-Null
+          echo "VCPKG_EXE=$env:VCPKG_ROOT\vcpkg.exe" >> $env:GITHUB_ENV
+
+      - name: "③ Install Vulkan SDK"
         if: steps.cache-vulkan.outputs.cache-hit != 'true'
-        shell: pwsh
         run: |
           $url = "https://sdk.lunarg.com/sdk/download/$env:VULKAN_VER/windows/VulkanSDK-$env:VULKAN_VER-Installer.exe"
-          $out = "$env:TEMP\VulkanSDK.exe"
-          Invoke-WebRequest -Uri $url -OutFile $out -TimeoutSec 300
-          Start-Process -FilePath $out `
+          Invoke-WebRequest -Uri $url -OutFile "$env:TEMP\VulkanSDK.exe" -TimeoutSec 300
+          Start-Process "$env:TEMP\VulkanSDK.exe" `
             -ArgumentList "--accept-licenses --default-answer --confirm-command install" `
             -Wait -NoNewWindow
 
-      - name: "🌋 Set Vulkan env"
-        shell: pwsh
+      - name: "③ Set Vulkan env"
         run: |
-          echo "VULKAN_SDK=C:\VulkanSDK\$env:VULKAN_VER" >> $env:GITHUB_ENV
-          echo "C:\VulkanSDK\$env:VULKAN_VER\Bin" >> $env:GITHUB_PATH
+          echo "VULKAN_SDK=C:\VulkanSDK\$env:VULKAN_VER"   >> $env:GITHUB_ENV
+          echo "C:\VulkanSDK\$env:VULKAN_VER\Bin"          >> $env:GITHUB_PATH
 
-      # ── FFmpeg via vcpkg ───────────────────────────────────────────────────
-      - name: "🎬 Install FFmpeg (vcpkg)"
-        shell: pwsh
+      # ─────────────────────────────────────────────────────────────────────
+      # 4. DEPENDENCIES (vcpkg)
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "④ Install FFmpeg via vcpkg"
         run: |
           & $env:VCPKG_EXE install `
-            "ffmpeg[core,avcodec,avformat,avutil,swscale,swresample]:x64-windows" `
-            --triplet x64-windows --no-print-usage 2>&1
+            "ffmpeg[core,avcodec,avformat,avutil,swscale,swresample,avdevice]:x64-windows" `
+            --triplet x64-windows `
+            --binarysource="clear;files,$env:VCPKG_CACHE,readwrite" `
+            --no-print-usage
+          echo "FFMPEG_PREFIX=$env:VCPKG_ROOT\installed\x64-windows" >> $env:GITHUB_ENV
 
-      # ── Configure CMake ───────────────────────────────────────────────────
-      - name: "⚙ Configure CMake"
-        shell: pwsh
+      - name: "④ Install ONNX Runtime via vcpkg"
+        run: |
+          & $env:VCPKG_EXE install `
+            "onnxruntime:x64-windows" `
+            --triplet x64-windows `
+            --binarysource="clear;files,$env:VCPKG_CACHE,readwrite" `
+            --no-print-usage
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 5. CMAKE CONFIGURE
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑤ CMake · Configure"
         run: |
           cmake -B build `
             -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE" `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
             -DVCPKG_TARGET_TRIPLET=x64-windows `
+            -DAURORA_VERSION="$env:AURORA_VER" `
             -DAURORA_BUILD_DESKTOP=ON `
             -DAURORA_BUILD_TESTS=ON `
             -DAURORA_USE_VULKAN=ON `
             -DAURORA_USE_DX11=ON `
             -DAURORA_USE_DX12=ON `
-            -DFFMPEG_PREFIX="$env:VCPKG_ROOT/installed/x64-windows" `
+            -DFFMPEG_PREFIX="$env:FFMPEG_PREFIX" `
             -DQt6_DIR="$env:Qt6_DIR" `
-            -DVULKAN_SDK="$env:VULKAN_SDK"
+            -DVULKAN_SDK="$env:VULKAN_SDK" `
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-      # ── Build ─────────────────────────────────────────────────────────────
-      - name: "🔨 Build"
-        shell: pwsh
+      # ─────────────────────────────────────────────────────────────────────
+      # 6. BUILD
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑥ CMake · Build"
         run: |
           cmake --build build `
             --config $env:BUILD_TYPE `
             --parallel $env:NUMBER_OF_PROCESSORS `
-            -- /verbosity:minimal /nologo
+            -- /verbosity:minimal /nologo /p:WarningLevel=3
 
-      # ── Tests ─────────────────────────────────────────────────────────────
-      - name: "🧪 Run Tests"
-        shell: pwsh
+      # ─────────────────────────────────────────────────────────────────────
+      # 7. TEST
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑦ CTest · Run"
         working-directory: build
         run: |
-          ctest -C $env:BUILD_TYPE --output-on-failure --timeout 60 -j4
-        continue-on-error: false
+          ctest -C $env:BUILD_TYPE `
+            --output-on-failure `
+            --timeout 120 `
+            -j4 `
+            --test-output-size-failed 65536
 
-      # ── Upload test results ────────────────────────────────────────────────
-      - name: "📊 Upload Test Results"
+      - name: "⑦ Upload test results"
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TestResults-Windows-x64-${{ env.BUILD_TYPE }}
+          name: TestResults-Windows-${{ env.BUILD_TYPE }}
           path: build/Testing/**/*.xml
           retention-days: 14
+          if-no-files-found: ignore
 
-      # ── Package ───────────────────────────────────────────────────────────
-      - name: "📦 Package (Release)"
+      # ─────────────────────────────────────────────────────────────────────
+      # 8. PACKAGE (Release only)
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑧ Deploy Qt DLLs"
         if: env.BUILD_TYPE == 'Release'
-        shell: pwsh
         run: |
-          $exePath = "build\bin\$env:BUILD_TYPE\AuroraPlayer.exe"
-          if (Test-Path $exePath) {
-            $winDeployQt = "$env:Qt6_DIR\..\..\..\bin\windeployqt.exe"
-            if (Test-Path $winDeployQt) {
-              & $winDeployQt --release --no-translations $exePath
+          $exe = "build\bin\Release\AuroraPlayer.exe"
+          if (-not (Test-Path $exe)) { $exe = "build\desktop\windows\Release\AuroraPlayer.exe" }
+          $wdq = "$env:Qt6_DIR\..\..\..\bin\windeployqt.exe"
+          if ((Test-Path $exe) -and (Test-Path $wdq)) {
+            & $wdq --release --no-translations --no-system-d3d-compiler "$exe"
+            echo "✓ windeployqt done"
+          } else {
+            echo "⚠ Executable or windeployqt not found — skipping deploy"
+          }
+
+      - name: "⑧ Create ZIP package"
+        if: env.BUILD_TYPE == 'Release'
+        run: |
+          $pkg = "AuroraPlayer-$env:AURORA_VER-win64"
+          New-Item -ItemType Directory -Force $pkg | Out-Null
+
+          # Copy exe + DLLs
+          $binDirs = @(
+            "build\bin\Release",
+            "build\desktop\windows\Release",
+            "build\Release"
+          )
+          foreach ($d in $binDirs) {
+            if (Test-Path $d) {
+              Copy-Item "$d\*" "$pkg\" -Recurse -Force
+              echo "✓ Copied from $d"
+              break
             }
           }
 
-          $ver  = "1.0.0"
-          $arch = "win64"
-          $pkg  = "AuroraPlayer-${ver}-${arch}"
+          Compress-Archive -Path $pkg -DestinationPath "$pkg.zip" -Force
+          echo "PACKAGE_NAME=$pkg" >> $env:GITHUB_ENV
+          echo "✓ Package: $pkg.zip"
+          Get-Item "$pkg.zip" | Select-Object Name, Length
 
-          New-Item -ItemType Directory -Force $pkg | Out-Null
-          if (Test-Path "build\bin\$env:BUILD_TYPE") {
-            Copy-Item "build\bin\$env:BUILD_TYPE\*" "$pkg\" -Recurse -Force
-          }
-          Compress-Archive -Path $pkg -DestinationPath "${pkg}.zip" -Force
-          echo "PACKAGE_ZIP=${pkg}.zip" >> $env:GITHUB_ENV
-          echo "Packaged: ${pkg}.zip"
-
-      # ── Upload package ─────────────────────────────────────────────────────
-      - name: "⬆ Upload Package"
+      - name: "⑧ Upload package artifact"
         uses: actions/upload-artifact@v4
         with:
           name: AuroraPlayer-Windows-x64-${{ env.BUILD_TYPE }}
-          path: |
-            AuroraPlayer-*.zip
+          path: AuroraPlayer-*.zip
           if-no-files-found: warn
           retention-days: 30
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 9. BUILD SUMMARY
+      # ─────────────────────────────────────────────────────────────────────
+      - name: "⑨ Job Summary"
+        if: always()
+        run: |
+          $status = if ($?) { "✅ Success" } else { "❌ Failed" }
+          $body = @"
+          ## 🪟 Windows Build Summary
+          | Field        | Value |
+          |---|---|
+          | **Status**   | $status |
+          | **Type**     | $env:BUILD_TYPE |
+          | **Qt**       | $env:QT_VERSION |
+          | **Vulkan**   | $env:VULKAN_VER |
+          | **Commit**   | ${{ github.sha }} |
+          "@
+          $body | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append

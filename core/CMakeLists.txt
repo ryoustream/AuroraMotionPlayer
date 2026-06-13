@@ -58,11 +58,13 @@ add_library(aurora_core STATIC
     interpolation/InterpolationPipeline.cpp
 
     # Upscaler
+    upscaler/ImageUtils.cpp
     upscaler/RealESRGAN.cpp
     upscaler/SPAN.cpp
     upscaler/Anime4K.cpp
     upscaler/FSRCNN.cpp
     upscaler/UpscalerFactory.cpp
+    upscaler/UpscalerPipeline.cpp
 
     # HDR
     hdr/HDREngine.cpp

@@ -32,6 +32,8 @@ add_executable(aurora_tests
     unit/test_AudioResampler.cpp
     # Session 4
     unit/test_InterpolationPipeline.cpp
+    # Session 5
+    unit/test_Upscaler.cpp
 )
 
 target_include_directories(aurora_tests PRIVATE

@@ -46,6 +46,8 @@ public:
     video::VideoFramePtr process(video::VideoFramePtr frame) override;
     bool isInitialized() const noexcept override { return m_initialized; }
 private:
+    std::vector<float> runInference(const std::vector<float>& rgb,
+                                     int w, int h, int outW, int outH) const;
     struct Impl; std::unique_ptr<Impl> m_impl;
     bool m_initialized = false;
     UpscalerConfig m_cfg;

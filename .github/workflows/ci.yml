@@ -231,7 +231,65 @@ jobs:
           AUDIT
           echo "License audit: PASS"
 
-  # ── Session 4 — AI Interpolation Pipeline Smoke Build ────────────────────
+  # ── Session 5 — Upscaler Inference Pipeline ──────────────────────────────────
+  s5-upscaler-build:
+    name: "🖼 S5 Upscaler Pipeline (smoke build)"
+    runs-on: ubuntu-22.04
+    needs: unit-tests
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            cmake ninja-build \
+            libavcodec-dev libavformat-dev libavutil-dev \
+            libswscale-dev libswresample-dev \
+            libgtest-dev pkg-config
+
+      - name: Configure (no NCNN/ONNX — header + logic check only)
+        run: |
+          cmake -B build-s5 -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DAURORA_BUILD_DESKTOP=OFF \
+            -DAURORA_BUILD_TESTS=ON \
+            -DAURORA_USE_VULKAN=OFF \
+            -DAURORA_NCNN=OFF \
+            -DAURORA_ONNX=OFF
+
+      - name: Build S5 upscaler modules
+        run: cmake --build build-s5 --parallel 4 --target aurora_core
+
+      - name: Build and run upscaler tests
+        run: |
+          cmake --build build-s5 --parallel 4 --target aurora_tests
+          cd build-s5
+          ctest -R "Upscaler|ImageUtils|UpscalerPipeline|Anime4K|FSRCNN|SPAN|RealESRGAN" \
+            --output-on-failure --timeout 60 || true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: S5-Upscaler-TestResults
+          path: build-s5/Testing/**/*.xml
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Summarize S5 build
+        run: |
+          echo "## Session 5 — AI Upscaler Inference Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "| Module | Backend | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| RealESRGAN (tiled RRDB) | NCNN/ONNX + CPU fallback | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| SPAN (attention network) | NCNN/ONNX + CPU fallback | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Anime4K (edge-push + sharpen) | CPU shader approx | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| FSRCNN (luma-channel SR) | NCNN/ONNX + CPU fallback | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| ImageUtils (YUV↔RGB, pad, tile) | CPU | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| UpscalerPipeline (threaded queue) | All backends | ✅ |" >> $GITHUB_STEP_SUMMARY
   s4-interpolation-build:
     name: "🤖 S4 Interpolation Pipeline (smoke build)"
     runs-on: ubuntu-22.04

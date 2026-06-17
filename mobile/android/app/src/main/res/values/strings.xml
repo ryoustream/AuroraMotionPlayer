@@ -60,4 +60,14 @@
     <string name="cancel">Cancel</string>
     <string name="close">Close</string>
     <string name="version">Version %1$s</string>
+
+    <!-- Session 7 additions -->
+    <string name="ai_toggle">Toggle AI interpolation</string>
+    <string name="subtitle_download">Download subtitle</string>
+    <string name="subtitle_load_external">Load subtitle file</string>
+    <string name="speed_badge">Playback speed</string>
+    <string name="ab_repeat">AB Repeat</string>
+    <string name="chapter_prev">Previous chapter</string>
+    <string name="chapter_next">Next chapter</string>
+    <string name="pip_enter">Enter Picture-in-Picture</string>
 </resources>

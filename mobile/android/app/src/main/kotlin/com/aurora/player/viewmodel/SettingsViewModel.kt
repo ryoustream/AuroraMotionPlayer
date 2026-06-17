@@ -97,6 +97,29 @@ class SettingsViewModel : ViewModel() {
     val subtitleLangIndex: LiveData<Int> = _subtitleLangIndex
     fun setSubtitleLang(idx: Int) { _subtitleLangIndex.value = idx }
 
+    // ── S7 additions ──────────────────────────────────────────────────────────
+
+    // Subtitle delay (ms) — -1000..+1000
+    private val _subtitleDelay = MutableLiveData(0)
+    val subtitleDelay: LiveData<Int> = _subtitleDelay
+    fun setSubtitleDelay(ms: Int) { _subtitleDelay.value = ms }
+
+    // Subtitle vertical offset
+    private val _subtitleOffset = MutableLiveData(0)
+    val subtitleOffset: LiveData<Int> = _subtitleOffset
+    fun setSubtitleOffset(pct: Int) { _subtitleOffset.value = pct }
+
+    // Request subtitle download (triggers activity to open SubtitleFragment)
+    private val _subtitleDownloadRequest = MutableLiveData<Boolean>()
+    val subtitleDownloadRequest: LiveData<Boolean> = _subtitleDownloadRequest
+    fun requestSubtitleDownload() { _subtitleDownloadRequest.value = true }
+
+    // Clear app cache
+    fun clearCache(ctx: Context) {
+        runCatching { ctx.cacheDir.deleteRecursively() }
+        runCatching { ctx.externalCacheDir?.deleteRecursively() }
+    }
+
     private val _subtitleDownloadRequest = MutableLiveData<Unit>()
     val subtitleDownloadRequest: LiveData<Unit> = _subtitleDownloadRequest
     fun requestSubtitleDownload() { _subtitleDownloadRequest.value = Unit }

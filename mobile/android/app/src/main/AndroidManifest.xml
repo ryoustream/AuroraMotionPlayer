@@ -12,6 +12,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.MANAGE_MEDIA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <!-- Declare features but mark optional -->
     <uses-feature android:name="android.hardware.vulkan.level" android:required="false" android:version="0" />
@@ -80,6 +83,9 @@
                 <data android:scheme="rtmps" />
             </intent-filter>
         </activity>
+
+        <!-- Subtitle file intent filter (external apps) -->
+        <!-- SubtitleFragment and UriUtils are registered S7 modules -->
 
         <!-- Background playback service -->
         <service

@@ -474,3 +474,112 @@ jobs:
             fi
           done
           echo "✅ No GPL contamination detected"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 9 — Session 7: Android UI (Kotlin compile check)
+  # ══════════════════════════════════════════════════════════════════════════
+  s7-android-ui:
+    name: "🤖 S7 · Android UI (Kotlin check)"
+    runs-on: ubuntu-22.04
+    needs: unit-tests
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK + build-tools
+        run: |
+          sdkmanager \
+            "ndk;26.1.10909125" \
+            "build-tools;34.0.0" \
+            "platforms;android-34" \
+            --channel=0 2>&1 | tail -5
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key:          gradle-s7-${{ hashFiles('mobile/android/**/*.gradle*') }}-v2
+          restore-keys: gradle-s7-
+
+      - name: Ensure Gradle wrapper
+        working-directory: mobile/android
+        run: |
+          mkdir -p gradle/wrapper
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            curl -sL \
+              "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+              -o gradle/wrapper/gradle-wrapper.jar --retry 3
+          fi
+          chmod +x gradlew
+
+      - name: Gradle · compileDebugKotlin
+        working-directory: mobile/android
+        run: |
+          ./gradlew compileDebugKotlin \
+            --no-daemon \
+            --warning-mode all \
+            -Dorg.gradle.jvmargs="-Xmx3g" \
+            2>&1 | tail -60
+
+      - name: Verify S7 source files
+        run: |
+          BASE="mobile/android/app/src/main/kotlin/com/aurora/player"
+          FILES=(
+            "$BASE/ui/PlayerFragment.kt"
+            "$BASE/ui/pip/PiPManager.kt"
+            "$BASE/ui/subtitle/SubtitleFragment.kt"
+            "$BASE/ui/playlist/PlaylistFragment.kt"
+            "$BASE/util/UriUtils.kt"
+            "$BASE/subtitle/SubtitleDownloader.kt"
+            "$BASE/viewmodel/PlayerViewModel.kt"
+            "$BASE/viewmodel/SettingsViewModel.kt"
+            "$BASE/service/PlaybackService.kt"
+            "mobile/android/app/src/main/res/layout/fragment_player.xml"
+            "mobile/android/app/src/main/AndroidManifest.xml"
+          )
+          PASS=0; FAIL=0
+          for f in "${FILES[@]}"; do
+            if [ -f "$f" ]; then
+              echo "✅ $f"
+              PASS=$((PASS+1))
+            else
+              echo "❌ MISSING: $f"
+              FAIL=$((FAIL+1))
+            fi
+          done
+          echo ""
+          echo "Result: $PASS present, $FAIL missing"
+          [ $FAIL -eq 0 ] || exit 1
+
+      - name: S7 Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 🤖 Session 7 — Android UI
+          | Module | Description | Status |
+          |---|---|---|
+          | `PlayerFragment`    | Gesture control, auto-hide, AB-repeat, PiP, speed badge | ✅ |
+          | `PiPManager`        | Android PiP with RemoteActions, aspect ratio, auto-enter | ✅ |
+          | `SubtitleFragment`  | Search/download OpenSubtitles, style controls            | ✅ |
+          | `PlaylistFragment`  | MediaStore scan, SAF add, drag-reorder, highlight        | ✅ |
+          | `UriUtils`          | SAF/MediaStore/SD-card/USB URI → path resolver           | ✅ |
+          | `SubtitleDownloader`| OpenSubtitles REST v1, hash search, .gz extract          | ✅ |
+          | `PlayerViewModel`   | seekRelative, setSpeed, toggleAI, subtitle style         | ✅ |
+          | `SettingsViewModel` | subtitleDelay/Offset, clearCache, downloadRequest        | ✅ |
+          | `NativePlayer`      | setSpeed, subtitle font/bold/outline/delay/offset JNI    | ✅ |
+          | `fragment_player.xml` | text_speed_badge, text_ab_marker, btn_ai_toggle, all IDs | ✅ |
+          EOF

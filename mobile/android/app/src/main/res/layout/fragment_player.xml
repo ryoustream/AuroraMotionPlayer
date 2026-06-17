@@ -1,42 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Aurora Motion Player — fragment_player.xml (Session 7)
+    Full-featured player layout with:
+      - SurfaceView          : video output (center crop / fit)
+      - subtitle_text        : styled subtitle overlay
+      - progress_buffering   : buffering spinner
+      - ai_stats_overlay     : AI interpolation / GPU stats
+      - text_speed_badge     : speed indicator (e.g. ×2.00)
+      - text_ab_marker       : AB repeat range indicator
+      - controls_overlay     : auto-hiding bottom control strip
+        ├─ text_title        : file name
+        ├─ seek_bar          : video scrubber
+        └─ button row:
+             btn_seek_back   : ‒10 s  (long-press = set A)
+             btn_play_pause  : ▶ / ⏸
+             btn_seek_fwd    : +10 s  (long-press = set B)
+             text_position   : current time
+             text_duration   : total time
+             btn_ai_toggle   : toggle AI interpolation
+             btn_playlist    : open playlist
+             btn_fullscreen  : rotate / fullscreen
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/player_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/aurora_void">
 
-    <!-- Video surface -->
+    <!-- ══════════════════════════════════════════
+         VIDEO SURFACE
+    ══════════════════════════════════════════ -->
     <SurfaceView
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center" />
 
-    <!-- Subtitle overlay -->
+    <!-- ══════════════════════════════════════════
+         BUFFERING SPINNER
+    ══════════════════════════════════════════ -->
+    <ProgressBar
+        android:id="@+id/progress_buffering"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/aurora_primary"
+        android:visibility="gone" />
+
+    <!-- ══════════════════════════════════════════
+         AI STATS OVERLAY  (top-end corner)
+    ══════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/ai_stats_overlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_margin="12dp"
+        android:background="#CC000010"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/text_interp_fps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="AI: — FPS"
+            android:textColor="@color/aurora_primary"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/text_gpu_usage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="GPU: — %"
+            android:textColor="@color/aurora_secondary"
+            android:textSize="11sp" />
+
+    </LinearLayout>
+
+    <!-- ══════════════════════════════════════════
+         SPEED BADGE  (top-start corner)
+    ══════════════════════════════════════════ -->
+    <TextView
+        android:id="@+id/text_speed_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_margin="12dp"
+        android:background="#CC000010"
+        android:fontFamily="monospace"
+        android:padding="4dp"
+        android:text="×2.00"
+        android:textColor="#FFD700"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <!-- ══════════════════════════════════════════
+         AB REPEAT MARKER  (top-center)
+    ══════════════════════════════════════════ -->
+    <TextView
+        android:id="@+id/text_ab_marker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="12dp"
+        android:background="#CC000010"
+        android:fontFamily="monospace"
+        android:padding="4dp"
+        android:textColor="#00E5FF"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+    <!-- ══════════════════════════════════════════
+         SUBTITLE OVERLAY  (above controls)
+    ══════════════════════════════════════════ -->
     <TextView
         android:id="@+id/subtitle_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="72dp"
-        android:layout_marginHorizontal="16dp"
-        android:background="#80000000"
+        android:layout_marginBottom="88dp"
+        android:layout_marginHorizontal="24dp"
+        android:background="#A0000000"
         android:gravity="center"
-        android:padding="4dp"
+        android:lineSpacingMultiplier="1.2"
+        android:padding="6dp"
         android:textColor="@color/aurora_on_surface"
         android:textSize="16sp"
         android:visibility="gone" />
 
-    <!-- Buffering indicator -->
-    <ProgressBar
-        android:id="@+id/progress_buffering"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="center"
-        android:indeterminateTint="@color/aurora_primary"
-        android:visibility="gone" />
-
-    <!-- Controls overlay (fades out after inactivity) -->
+    <!-- ══════════════════════════════════════════
+         CONTROLS OVERLAY  (bottom strip)
+    ══════════════════════════════════════════ -->
     <LinearLayout
         android:id="@+id/controls_overlay"
         android:layout_width="match_parent"
@@ -44,7 +142,24 @@
         android:layout_gravity="bottom"
         android:background="@drawable/player_controls_gradient"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:paddingHorizontal="8dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="8dp">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/text_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:fontFamily="sans-serif-medium"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:maxLines="1"
+            android:paddingBottom="4dp"
+            android:scrollHorizontally="true"
+            android:text="Aurora Motion Player"
+            android:textColor="@color/aurora_on_surface"
+            android:textSize="13sp" />
 
         <!-- Seek bar -->
         <SeekBar
@@ -52,47 +167,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:progressTint="@color/player_progress_played"
-            android:thumbTint="@color/aurora_primary"
-            android:secondaryProgressTint="@color/player_progress_buffered" />
+            android:secondaryProgressTint="@color/player_progress_buffered"
+            android:thumbTint="@color/aurora_primary" />
 
-        <!-- Time / controls row -->
+        <!-- Button row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/text_position"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:text="0:00:00"
-                android:textColor="@color/aurora_on_surface"
-                android:textSize="12sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="4dp"
-                android:text="/"
-                android:textColor="@color/aurora_on_surface_secondary"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/text_duration"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:text="0:00:00"
-                android:textColor="@color/aurora_on_surface_secondary"
-                android:textSize="12sp" />
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
+            <!-- Seek back (-10 s) — long press: set A point -->
             <ImageButton
                 android:id="@+id/btn_seek_back"
                 style="@style/Widget.AppCompat.ImageButton"
@@ -103,6 +188,7 @@
                 android:src="@android:drawable/ic_media_rew"
                 android:tint="@color/aurora_on_surface" />
 
+            <!-- Play / Pause -->
             <ImageButton
                 android:id="@+id/btn_play_pause"
                 style="@style/Widget.AppCompat.ImageButton"
@@ -113,6 +199,7 @@
                 android:src="@android:drawable/ic_media_play"
                 android:tint="@color/aurora_on_surface" />
 
+            <!-- Seek forward (+10 s) — long press: set B point -->
             <ImageButton
                 android:id="@+id/btn_seek_fwd"
                 style="@style/Widget.AppCompat.ImageButton"
@@ -123,50 +210,76 @@
                 android:src="@android:drawable/ic_media_ff"
                 android:tint="@color/aurora_on_surface" />
 
+            <!-- Time display -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/text_position"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="0:00"
+                    android:textColor="@color/aurora_on_surface"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="3dp"
+                    android:text="/"
+                    android:textColor="@color/aurora_on_surface_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/text_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="0:00"
+                    android:textColor="@color/aurora_on_surface_secondary"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <!-- AI toggle -->
+            <ImageButton
+                android:id="@+id/btn_ai_toggle"
+                style="@style/Widget.AppCompat.ImageButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/ai_toggle"
+                android:src="@android:drawable/star_on"
+                android:tint="@color/aurora_secondary" />
+
+            <!-- Playlist -->
+            <ImageButton
+                android:id="@+id/btn_playlist"
+                style="@style/Widget.AppCompat.ImageButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/playlist"
+                android:src="@android:drawable/ic_menu_sort_by_size"
+                android:tint="@color/aurora_on_surface" />
+
+            <!-- Fullscreen / rotate -->
             <ImageButton
                 android:id="@+id/btn_fullscreen"
                 style="@style/Widget.AppCompat.ImageButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginStart="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/fullscreen"
                 android:src="@android:drawable/ic_menu_zoom"
                 android:tint="@color/aurora_on_surface" />
 
         </LinearLayout>
-    </LinearLayout>
-
-    <!-- AI stats overlay (top right, shown when AI active) -->
-    <LinearLayout
-        android:id="@+id/ai_stats_overlay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_margin="12dp"
-        android:background="#B3000000"
-        android:orientation="vertical"
-        android:padding="8dp"
-        android:visibility="gone">
-
-        <TextView
-            android:id="@+id/text_interp_fps"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:text="AI: 60 FPS"
-            android:textColor="@color/aurora_primary"
-            android:textSize="11sp" />
-
-        <TextView
-            android:id="@+id/text_gpu_usage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:text="GPU: --%"
-            android:textColor="@color/aurora_secondary"
-            android:textSize="11sp" />
-
     </LinearLayout>
 
 </FrameLayout>

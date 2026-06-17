@@ -42,6 +42,13 @@ class NativePlayer {
     fun getBenchmarkStats(): String = nativeGetBenchmarkStats(handle)
 
     // ── JNI declarations ─────────────────────────────────────────────────────
+    fun setSpeed(speed: Float)             = nativeSetSpeed(handle, speed)
+    fun setSubtitleFontSize(sp: Int)       = nativeSetSubtitleFontSize(handle, sp)
+    fun setSubtitleBold(bold: Boolean)     = nativeSetSubtitleBold(handle, bold)
+    fun setSubtitleOutline(on: Boolean)    = nativeSetSubtitleOutline(handle, on)
+    fun setSubtitleDelay(ms: Int)          = nativeSetSubtitleDelay(handle, ms)
+    fun setSubtitleOffset(pct: Int)        = nativeSetSubtitleOffset(handle, pct)
+
     private external fun nativeCreate(): Long
     private external fun nativeDestroy(handle: Long)
     private external fun nativeSurfaceCreated(handle: Long, surface: Surface)
@@ -64,3 +71,4 @@ class NativePlayer {
         init { System.loadLibrary("aurora_jni") }
     }
 }
+

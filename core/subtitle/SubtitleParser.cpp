@@ -1,6 +1,7 @@
 // SubtitleParser.cpp — full parser implementations for SRT, ASS/SSA, VTT, PGS
 // This file complements SubtitleEngine.cpp
 #include "SubtitleEngine.h"
+#include "PGSParser.h"
 #include <fstream>
 #include <sstream>
 #include <regex>
@@ -230,48 +231,13 @@ std::vector<SubtitleEvent> SubtitleParser::parseVTT(const std::string& path) {
 }
 
 // ── PGS / SUP Parser ─────────────────────────────────────────────────────────
-// Minimal PGS reader: parses Presentation Composition Segment to extract
-// bitmap dimensions and timing. Full decode requires ODS palette processing.
+// Session 8: full decode delegated to PGSParser, which implements:
+//   - PCS/WDS/PDS/ODS segment parsing
+//   - RLE bitmap decompression
+//   - YCbCr → RGBA palette colorisation
+//   - Display-set compositing into timed SubtitleEvents with real bitmaps
 std::vector<SubtitleEvent> SubtitleParser::parsePGS(const std::string& path) {
-    std::vector<SubtitleEvent> events;
-    std::ifstream f(path, std::ios::binary);
-    if (!f.is_open()) return events;
-
-    // PGS magic: 0x5047 ("PG")
-    while (f.good()) {
-        uint8_t magic[2];
-        if (!f.read(reinterpret_cast<char*>(magic), 2)) break;
-        if (magic[0] != 0x50 || magic[1] != 0x47) break;
-
-        // PTS (4 bytes), DTS (4 bytes)
-        uint8_t timebuf[8];
-        if (!f.read(reinterpret_cast<char*>(timebuf), 8)) break;
-        uint32_t pts = (timebuf[0] << 24) | (timebuf[1] << 16) |
-                       (timebuf[2] << 8)  |  timebuf[3];
-
-        uint8_t segType;
-        if (!f.read(reinterpret_cast<char*>(&segType), 1)) break;
-
-        uint8_t lenBuf[2];
-        if (!f.read(reinterpret_cast<char*>(lenBuf), 2)) break;
-        uint16_t segLen = (lenBuf[0] << 8) | lenBuf[1];
-
-        std::vector<uint8_t> segData(segLen);
-        if (!f.read(reinterpret_cast<char*>(segData.data()), segLen)) break;
-
-        // Segment type 0x16 = Presentation Composition Segment
-        if (segType == 0x16 && segLen >= 11) {
-            SubtitleEvent ev;
-            ev.startTime = pts / 90000.0;  // 90 kHz clock
-            ev.endTime   = ev.startTime + 3.0;  // placeholder
-            // Width/height at offset 0,2; comp_state at 6
-            ev.bitmapW = (segData[0] << 8) | segData[1];
-            ev.bitmapH = (segData[2] << 8) | segData[3];
-            ev.text    = "[PGS Subtitle]";
-            events.push_back(ev);
-        }
-    }
-    return events;
+    return PGSParser::parseFile(path);
 }
 
 } // namespace aurora::subtitle

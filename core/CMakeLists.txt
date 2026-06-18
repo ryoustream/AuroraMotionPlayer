@@ -17,6 +17,9 @@ add_library(aurora_core STATIC
     subtitle/SubtitleEngine.cpp
     subtitle/SubtitleParser.cpp
     subtitle/SubtitleRenderer.cpp
+    subtitle/PGSParser.cpp
+    subtitle/FreeTypeRenderer.cpp
+    subtitle/ASSRenderer.cpp
 
     # Network
     network/NetworkSource.cpp
@@ -122,6 +125,18 @@ endif()
 if(LIBPLACEBO_FOUND)
     target_link_libraries(aurora_core PUBLIC PkgConfig::LIBPLACEBO)
     target_compile_definitions(aurora_core PUBLIC AURORA_LIBPLACEBO=1)
+endif()
+
+# ── FreeType (Session 8 — subtitle text rendering) ─────────────────────────────
+# Optional: if not found, FreeTypeRenderer degrades gracefully to a
+# semi-transparent placeholder box (see SubtitleRenderer fallback path).
+find_package(Freetype QUIET)
+if(Freetype_FOUND OR FREETYPE_FOUND)
+    target_link_libraries(aurora_core PUBLIC Freetype::Freetype)
+    target_compile_definitions(aurora_core PUBLIC AURORA_HAS_FREETYPE=1)
+    message(STATUS "Aurora: FreeType found — subtitle text rendering enabled")
+else()
+    message(WARNING "Aurora: FreeType NOT found — subtitle text will render as placeholder boxes")
 endif()
 
 

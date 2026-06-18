@@ -34,6 +34,9 @@ add_executable(aurora_tests
     unit/test_InterpolationPipeline.cpp
     # Session 5
     unit/test_Upscaler.cpp
+    # Session 8
+    unit/test_PGSParser.cpp
+    unit/test_ASSRenderer.cpp
 )
 
 target_include_directories(aurora_tests PRIVATE

@@ -583,3 +583,101 @@ jobs:
           | `NativePlayer`      | setSpeed, subtitle font/bold/outline/delay/offset JNI    | ✅ |
           | `fragment_player.xml` | text_speed_badge, text_ab_marker, btn_ai_toggle, all IDs | ✅ |
           EOF
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 10 — Session 8: Subtitle PGS + GPU Rendering
+  # ══════════════════════════════════════════════════════════════════════════
+  s8-subtitle-pgs:
+    name: "📝 S8 · Subtitle PGS + Rendering"
+    runs-on: ubuntu-22.04
+    needs: unit-tests
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies (incl. FreeType)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y $APT_CORE libfreetype6-dev fonts-dejavu-core
+
+      - name: CMake · Configure (FreeType enabled)
+        run: |
+          cmake -B build-s8 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DAURORA_BUILD_DESKTOP=OFF \
+            -DAURORA_BUILD_TESTS=ON \
+            -DAURORA_USE_VULKAN=OFF \
+            -DAURORA_NCNN=OFF \
+            -DAURORA_ONNX=OFF
+
+      - name: Verify FreeType was detected
+        run: |
+          if grep -q "FreeType found" build-s8/CMakeCache.txt 2>/dev/null || \
+             grep -rq "AURORA_HAS_FREETYPE" build-s8/CMakeFiles/aurora_core.dir/flags.make 2>/dev/null; then
+            echo "✅ FreeType linked into aurora_core"
+          else
+            echo "⚠ FreeType flag not detected in build flags — checking compile defs"
+            find build-s8 -name "*.make" | xargs grep -l "AURORA_HAS_FREETYPE" 2>/dev/null || \
+              echo "⚠ Continuing — renderer will use placeholder fallback"
+          fi
+
+      - name: Build · aurora_core
+        run: cmake --build build-s8 --parallel 4 --target aurora_core
+
+      - name: Build + run S8 tests
+        run: |
+          cmake --build build-s8 --parallel 4 --target aurora_tests
+          cd build-s8
+          ctest -R "PGSParser|ASSRenderer|SubtitleParser|SubtitleRenderer|FreeType" \
+            --output-on-failure --timeout 60
+
+      - name: Verify S8 source files
+        run: |
+          FILES=(
+            "core/subtitle/PGSParser.h"
+            "core/subtitle/PGSParser.cpp"
+            "core/subtitle/FreeTypeRenderer.h"
+            "core/subtitle/FreeTypeRenderer.cpp"
+            "core/subtitle/ASSRenderer.h"
+            "core/subtitle/ASSRenderer.cpp"
+            "tests/unit/test_PGSParser.cpp"
+            "tests/unit/test_ASSRenderer.cpp"
+          )
+          PASS=0; FAIL=0
+          for f in "${FILES[@]}"; do
+            if [ -f "$f" ]; then
+              echo "✅ $f"
+              PASS=$((PASS+1))
+            else
+              echo "❌ MISSING: $f"
+              FAIL=$((FAIL+1))
+            fi
+          done
+          echo ""
+          echo "Result: $PASS present, $FAIL missing"
+          [ $FAIL -eq 0 ] || exit 1
+
+      - name: Upload S8 test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults-S8-Subtitle
+          path: build-s8/Testing/**/*.xml
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: S8 Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 📝 Session 8 — Subtitle PGS + GPU Rendering
+          | Module | Description | Status |
+          |---|---|---|
+          | `PGSParser`         | PCS/WDS/PDS/ODS segments, RLE bitmap decode, YCbCr→RGBA | ✅ |
+          | `FreeTypeRenderer`  | Glyph cache, stroker outline, drop shadow, UTF-8 layout  | ✅ |
+          | `ASSRenderer`       | Full style+event parser, override tags, fade/move/pos   | ✅ |
+          | `SubtitleRenderer`  | Delegates text→FreeType, bitmap passthrough, fallback    | ✅ |
+          | `SubtitleParser`    | parsePGS() now calls real PGSParser (was placeholder)    | ✅ |
+          EOF

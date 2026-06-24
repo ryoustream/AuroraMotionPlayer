@@ -83,12 +83,23 @@ jobs:
       build_variant: "release"
 
   # ══════════════════════════════════════════════════════════════════════════
-  # JOB 4 — Publish GitHub Release
+  # JOB 4 — Build Windows Installer (WiX MSI + Setup EXE)
+  # ══════════════════════════════════════════════════════════════════════════
+  build-installer:
+    name: "📦 Build · WiX Installer"
+    needs: [prepare, build-windows]
+    uses: ./.github/workflows/build-installer.yml
+    with:
+      upload_artifact: "true"
+      sign: "false"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # JOB 5 — Publish GitHub Release
   # ══════════════════════════════════════════════════════════════════════════
   publish:
     name: "📦 Publish · GitHub Release"
     runs-on: ubuntu-22.04
-    needs: [prepare, build-windows, build-android]
+    needs: [prepare, build-windows, build-android, build-installer]
     timeout-minutes: 20
 
     steps:
@@ -140,6 +151,20 @@ jobs:
           if [ -n "$AAB" ]; then
             cp "$AAB" "dist/AuroraPlayer-${VERSION}.aab"
             echo "✓ Android AAB : AuroraPlayer-${VERSION}.aab"
+          fi
+
+          # Windows MSI installer
+          WIN_MSI=$(find artifacts/ -name "AuroraPlayer.msi" | head -1)
+          if [ -n "$WIN_MSI" ]; then
+            cp "$WIN_MSI" "dist/AuroraPlayer-${VERSION}-win64.msi"
+            echo "✓ Windows MSI : AuroraPlayer-${VERSION}-win64.msi"
+          fi
+
+          # Windows Setup EXE (Burn bootstrapper)
+          WIN_EXE=$(find artifacts/ -name "AuroraPlayerSetup-x64.exe" | head -1)
+          if [ -n "$WIN_EXE" ]; then
+            cp "$WIN_EXE" "dist/AuroraPlayerSetup-${VERSION}-x64.exe"
+            echo "✓ Windows EXE : AuroraPlayerSetup-${VERSION}-x64.exe"
           fi
 
           echo ""
@@ -198,6 +223,8 @@ jobs:
           fail_on_unmatched_files: false
           files: |
             dist/AuroraPlayer-*.zip
+            dist/AuroraPlayer-*.msi
+            dist/AuroraPlayerSetup-*-x64.exe
             dist/AuroraPlayer-*.apk
             dist/AuroraPlayer-*.aab
             dist/SHA256SUMS.txt

@@ -42,3 +42,8 @@ if(AURORA_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+# ── Installer (Windows only, optional) ───────────────────────────────────────
+if(WIN32 AND AURORA_BUILD_DESKTOP)
+    add_subdirectory(installer)
+endif()

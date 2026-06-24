@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Aurora Motion Player — Burn Bootstrapper Bundle
+  Chains: VC++ Redist 2022 → Aurora MSI
+  Usage : AuroraPlayerSetup-x64.exe [/silent] [/passive] [/norestart]
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+
+  <Bundle
+    Name="Aurora Motion Player"
+    Manufacturer="Aurora Project"
+    Version="$(var.BundleVersion)"
+    UpgradeCode="F3B8D5E2-4C9A-4F1B-B132-8G7E4D6B2F95"
+    Copyright="Copyright (c) 2024 Aurora Project"
+    IconSourceFile="..\..\desktop\windows\resources\icons\aurora.ico"
+    DisableRemove="no">
+
+    <bal:WixStandardBootstrapperApplication
+      LicenseFile="license.rtf"
+      LogoFile="..\..\desktop\windows\resources\images\aurora-banner.bmp"
+      Theme="hyperlinkLargeLicense"
+      LocalizationFile="en-us.wxl"
+      SuppressOptionsUI="no"
+      ShowVersion="yes" />
+
+    <Chain DisableRollback="no" ParallelCache="yes">
+
+      <!-- ── Prerequisite: Visual C++ Redistributable 2022 (x64) ───────── -->
+      <ExePackage
+        Id="VCRedist2022_x64"
+        Name="Visual C++ Redistributable 2022 (x64)"
+        SourceFile="https://aka.ms/vs/17/release/vc_redist.x64.exe"
+        DownloadUrl="https://aka.ms/vs/17/release/vc_redist.x64.exe"
+        DetectCondition="HKLM:SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64[Version] &gt;= v14.38.0"
+        InstallCondition="NOT HKLM:SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64[Installed]"
+        InstallArguments="/install /quiet /norestart"
+        RepairArguments="/repair /quiet /norestart"
+        UninstallArguments="/uninstall /quiet /norestart"
+        Vital="yes"
+        Permanent="yes"
+        Cache="keep">
+        <ExePackagePayload
+          SourceFile="https://aka.ms/vs/17/release/vc_redist.x64.exe"
+          DownloadUrl="https://aka.ms/vs/17/release/vc_redist.x64.exe" />
+      </ExePackage>
+
+      <!-- ── Main MSI ───────────────────────────────────────────────────── -->
+      <MsiPackage
+        Id="AuroraPlayerMsi"
+        SourceFile="AuroraPlayer.msi"
+        Vital="yes"
+        ForcePerMachine="yes"
+        DisplayInternalUI="no">
+        <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        <MsiProperty Name="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+      </MsiPackage>
+
+    </Chain>
+
+    <!-- ── Variable: install folder, exposed to MSI ─────────────────────── -->
+    <Variable Name="InstallFolder"
+              Type="string"
+              Value="[ProgramFiles64Folder]AuroraPlayer"
+              Persisted="yes" />
+
+  </Bundle>
+</Wix>

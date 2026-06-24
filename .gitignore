@@ -78,6 +78,9 @@ mobile/android/*.iml
 
 # AI Models (large binary files — download separately)
 models/
+# But allow model downloader scripts
+!tools/models/
+!tools/models/*.py
 *.onnx
 *.bin
 *.param

@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Aurora Motion Player — WiX Installer
+  Toolset : WiX v4 / Burn bootstrap (upgrades, silent, per-machine)
+  Layout  : ProgramFiles\AuroraPlayer\
+              bin\        — EXE + DLLs
+              models\     — AI models (RIFE, RealESRGAN, …)
+              fonts\      — Bundled fonts
+              plugins\    — Plugin SDK
+              assets\     — Resources
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       PRODUCT METADATA
+       ════════════════════════════════════════════════════════════════════ -->
+  <Package
+    Name="Aurora Motion Player"
+    Manufacturer="Aurora Project"
+    Version="!(bind.FileVersion.AuroraPlayerExe)"
+    UpgradeCode="E2A7C4F1-3B8D-4E9A-B021-7F6D3C5A1E84"
+    Language="1033"
+    Codepage="1252"
+    InstallerVersion="500"
+    Compressed="yes"
+    Scope="perMachine">
+
+    <!-- Allow major upgrades (replace older versions) -->
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of Aurora Motion Player is already installed."
+      Schedule="afterInstallInitialize" />
+
+    <!-- Embed all files in a single cabinet -->
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- ── Icon ────────────────────────────────────────────────────────── -->
+    <Icon Id="AuroraIcon.ico" SourceFile="..\..\desktop\windows\resources\icons\aurora.ico" />
+    <Property Id="ARPPRODUCTICON"   Value="AuroraIcon.ico" />
+    <Property Id="ARPHELPLINK"      Value="https://github.com/ryoustream/AuroraMotionPlayer" />
+    <Property Id="ARPURLINFOABOUT"  Value="https://github.com/ryoustream/AuroraMotionPlayer" />
+    <Property Id="ARPNOREPAIR"      Value="1" />
+
+    <!-- ── UI ──────────────────────────────────────────────────────────── -->
+    <ui:WixUI Id="WixUI_Aurora" />
+
+    <!-- Default install dir -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <!-- ── Launch after install ────────────────────────────────────────── -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT"
+              Value="Launch Aurora Motion Player" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         DIRECTORY STRUCTURE
+         ════════════════════════════════════════════════════════════════════ -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="AuroraPlayer">
+        <Directory Id="DIR_BIN"     Name="bin" />
+        <Directory Id="DIR_MODELS"  Name="models">
+          <Directory Id="DIR_RIFE"       Name="rife" />
+          <Directory Id="DIR_ESRGAN"     Name="realesrgan" />
+          <Directory Id="DIR_SPAN"       Name="span" />
+          <Directory Id="DIR_ANIME4K"    Name="anime4k" />
+          <Directory Id="DIR_FSRCNN"     Name="fsrcnn" />
+          <Directory Id="DIR_IFRNET"     Name="ifrnet" />
+          <Directory Id="DIR_FILM"       Name="film" />
+          <Directory Id="DIR_GMFLOW"     Name="gmflow" />
+        </Directory>
+        <Directory Id="DIR_FONTS"   Name="fonts" />
+        <Directory Id="DIR_PLUGINS" Name="plugins" />
+        <Directory Id="DIR_ASSETS"  Name="assets" />
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Desktop / Start Menu shortcuts live here -->
+    <StandardDirectory Id="DesktopFolder" />
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="DIR_STARTMENU" Name="Aurora Motion Player" />
+    </StandardDirectory>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         COMPONENTS — CORE BINARY
+         ════════════════════════════════════════════════════════════════════ -->
+    <ComponentGroup Id="CG_Core" Directory="DIR_BIN">
+
+      <Component Id="C_AuroraExe" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
+        <File Id="AuroraPlayerExe"
+              Source="..\..\build\windows\Release\AuroraPlayer.exe"
+              KeyPath="yes">
+          <!-- File association: common video formats -->
+          <Shortcut Id="SC_Desktop"
+                    Directory="DesktopFolder"
+                    Name="Aurora Motion Player"
+                    Description="AI-Powered Video Player"
+                    Icon="AuroraIcon.ico"
+                    WorkingDirectory="DIR_BIN"
+                    Advertise="no" />
+          <Shortcut Id="SC_StartMenu"
+                    Directory="DIR_STARTMENU"
+                    Name="Aurora Motion Player"
+                    Description="AI-Powered Video Player"
+                    Icon="AuroraIcon.ico"
+                    WorkingDirectory="DIR_BIN"
+                    Advertise="no" />
+        </File>
+      </Component>
+
+      <!-- Core library -->
+      <Component Id="C_CoreDll" Guid="B2C3D4E5-F6A7-8901-BCDE-F12345678901">
+        <File Id="AuroraCoreLib"
+              Source="..\..\build\windows\Release\aurora_core.dll"
+              KeyPath="yes" />
+      </Component>
+
+      <!-- FFmpeg DLLs -->
+      <Component Id="C_FFmpegAvcodec"   Guid="C3D4E5F6-A7B8-9012-CDEF-123456789012">
+        <File Source="..\..\build\windows\Release\avcodec-61.dll"   KeyPath="yes" />
+      </Component>
+      <Component Id="C_FFmpegAvformat"  Guid="D4E5F6A7-B8C9-0123-DEF0-234567890123">
+        <File Source="..\..\build\windows\Release\avformat-61.dll"  KeyPath="yes" />
+      </Component>
+      <Component Id="C_FFmpegAvutil"    Guid="E5F6A7B8-C9D0-1234-EF01-345678901234">
+        <File Source="..\..\build\windows\Release\avutil-59.dll"    KeyPath="yes" />
+      </Component>
+      <Component Id="C_FFmpegSwresample" Guid="F6A7B8C9-D0E1-2345-F012-456789012345">
+        <File Source="..\..\build\windows\Release\swresample-5.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="C_FFmpegSwscale"   Guid="A7B8C9D0-E1F2-3456-0123-567890123456">
+        <File Source="..\..\build\windows\Release\swscale-8.dll"    KeyPath="yes" />
+      </Component>
+
+      <!-- NCNN / ONNX Runtime -->
+      <Component Id="C_NcnnDll" Guid="B8C9D0E1-F2A3-4567-1234-678901234567">
+        <File Source="..\..\build\windows\Release\ncnn.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="C_OrtDll" Guid="C9D0E1F2-A3B4-5678-2345-789012345678">
+        <File Source="..\..\build\windows\Release\onnxruntime.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- Qt6 runtime DLLs -->
+      <Component Id="C_Qt6Core"    Guid="D0E1F2A3-B4C5-6789-3456-890123456789">
+        <File Source="..\..\build\windows\Release\Qt6Core.dll"    KeyPath="yes" />
+      </Component>
+      <Component Id="C_Qt6Gui"     Guid="E1F2A3B4-C5D6-7890-4567-901234567890">
+        <File Source="..\..\build\windows\Release\Qt6Gui.dll"     KeyPath="yes" />
+      </Component>
+      <Component Id="C_Qt6Widgets" Guid="F2A3B4C5-D6E7-8901-5678-012345678901">
+        <File Source="..\..\build\windows\Release\Qt6Widgets.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="C_Qt6Network"  Guid="A3B4C5D6-E7F8-9012-6789-123456789012">
+        <File Source="..\..\build\windows\Release\Qt6Network.dll"  KeyPath="yes" />
+      </Component>
+      <Component Id="C_Qt6OpenGL"   Guid="B4C5D6E7-F8A9-0123-789A-234567890123">
+        <File Source="..\..\build\windows\Release\Qt6OpenGL.dll"   KeyPath="yes" />
+      </Component>
+      <Component Id="C_Qt6Multimedia" Guid="C5D6E7F8-A9B0-1234-89AB-345678901234">
+        <File Source="..\..\build\windows\Release\Qt6Multimedia.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- Visual C++ Redistributable shim (fallback if vcredist not present) -->
+      <Component Id="C_VcRedistCheck" Guid="D6E7F8A9-B0C1-2345-9ABC-456789012345">
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\AuroraPlayer"
+                       Name="VcRedistChecked"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         COMPONENTS — FONTS
+         ════════════════════════════════════════════════════════════════════ -->
+    <ComponentGroup Id="CG_Fonts" Directory="DIR_FONTS">
+      <Component Id="C_FontNotoSans" Guid="E7F8A9B0-C1D2-3456-ABCD-567890123456">
+        <File Source="..\..\desktop\windows\resources\fonts\NotoSans-Regular.ttf"
+              KeyPath="yes" />
+      </Component>
+      <Component Id="C_FontNotoSansBold" Guid="F8A9B0C1-D2E3-4567-BCDE-678901234567">
+        <File Source="..\..\desktop\windows\resources\fonts\NotoSans-Bold.ttf"
+              KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         COMPONENTS — FILE ASSOCIATIONS (registry)
+         ════════════════════════════════════════════════════════════════════ -->
+    <ComponentGroup Id="CG_FileAssoc" Directory="DIR_BIN">
+      <Component Id="C_FileAssocMkv" Guid="A9B0C1D2-E3F4-5678-CDEF-789012345678">
+        <RegistryValue Root="HKCR" Key=".mkv\OpenWithProgids"
+                       Name="AuroraPlayer.mkv" Type="string" Value="" KeyPath="yes" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.mkv"
+                       Value="Matroska Video" Type="string" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.mkv\shell\open\command"
+                       Value="&quot;[INSTALLFOLDER]bin\AuroraPlayer.exe&quot; &quot;%1&quot;"
+                       Type="string" />
+      </Component>
+      <Component Id="C_FileAssocMp4" Guid="B0C1D2E3-F4A5-6789-DEF0-890123456789">
+        <RegistryValue Root="HKCR" Key=".mp4\OpenWithProgids"
+                       Name="AuroraPlayer.mp4" Type="string" Value="" KeyPath="yes" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.mp4"
+                       Value="MPEG-4 Video" Type="string" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.mp4\shell\open\command"
+                       Value="&quot;[INSTALLFOLDER]bin\AuroraPlayer.exe&quot; &quot;%1&quot;"
+                       Type="string" />
+      </Component>
+      <Component Id="C_FileAssocAvi" Guid="C1D2E3F4-A5B6-7890-EF01-901234567890">
+        <RegistryValue Root="HKCR" Key=".avi\OpenWithProgids"
+                       Name="AuroraPlayer.avi" Type="string" Value="" KeyPath="yes" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.avi"
+                       Value="AVI Video" Type="string" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.avi\shell\open\command"
+                       Value="&quot;[INSTALLFOLDER]bin\AuroraPlayer.exe&quot; &quot;%1&quot;"
+                       Type="string" />
+      </Component>
+      <Component Id="C_FileAssocMov" Guid="D2E3F4A5-B6C7-8901-F012-012345678901">
+        <RegistryValue Root="HKCR" Key=".mov\OpenWithProgids"
+                       Name="AuroraPlayer.mov" Type="string" Value="" KeyPath="yes" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.mov"
+                       Value="QuickTime Video" Type="string" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.mov\shell\open\command"
+                       Value="&quot;[INSTALLFOLDER]bin\AuroraPlayer.exe&quot; &quot;%1&quot;"
+                       Type="string" />
+      </Component>
+      <Component Id="C_FileAssocWebm" Guid="E3F4A5B6-C7D8-9012-0123-123456789012">
+        <RegistryValue Root="HKCR" Key=".webm\OpenWithProgids"
+                       Name="AuroraPlayer.webm" Type="string" Value="" KeyPath="yes" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.webm"
+                       Value="WebM Video" Type="string" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.webm\shell\open\command"
+                       Value="&quot;[INSTALLFOLDER]bin\AuroraPlayer.exe&quot; &quot;%1&quot;"
+                       Type="string" />
+      </Component>
+      <Component Id="C_FileAssocM2ts" Guid="F4A5B6C7-D8E9-0123-1234-234567890123">
+        <RegistryValue Root="HKCR" Key=".m2ts\OpenWithProgids"
+                       Name="AuroraPlayer.m2ts" Type="string" Value="" KeyPath="yes" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.m2ts"
+                       Value="Blu-ray Video" Type="string" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.m2ts\shell\open\command"
+                       Value="&quot;[INSTALLFOLDER]bin\AuroraPlayer.exe&quot; &quot;%1&quot;"
+                       Type="string" />
+      </Component>
+      <Component Id="C_FileAssocTs" Guid="A5B6C7D8-E9F0-1234-2345-345678901234">
+        <RegistryValue Root="HKCR" Key=".ts\OpenWithProgids"
+                       Name="AuroraPlayer.ts" Type="string" Value="" KeyPath="yes" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.ts"
+                       Value="MPEG Transport Stream" Type="string" />
+        <RegistryValue Root="HKCR" Key="AuroraPlayer.ts\shell\open\command"
+                       Value="&quot;[INSTALLFOLDER]bin\AuroraPlayer.exe&quot; &quot;%1&quot;"
+                       Type="string" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         COMPONENTS — UNINSTALL shortcut
+         ════════════════════════════════════════════════════════════════════ -->
+    <ComponentGroup Id="CG_StartMenu" Directory="DIR_STARTMENU">
+      <Component Id="C_StartMenuUninstall" Guid="B6C7D8E9-F0A1-2345-3456-456789012345">
+        <Shortcut Id="SC_Uninstall"
+                  Name="Uninstall Aurora Motion Player"
+                  Target="[SystemFolder]msiexec.exe"
+                  Arguments="/x [ProductCode]"
+                  Description="Remove Aurora Motion Player" />
+        <RegistryValue Root="HKCU"
+                       Key="SOFTWARE\AuroraPlayer\Installed"
+                       Type="integer" Value="1" KeyPath="yes" />
+        <RemoveFolder Id="RF_StartMenu" Directory="DIR_STARTMENU" On="uninstall" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         FEATURES
+         ════════════════════════════════════════════════════════════════════ -->
+    <Feature Id="F_Complete" Title="Aurora Motion Player" Level="1"
+             Description="Full installation including AI models and fonts."
+             ConfigurableDirectory="INSTALLFOLDER">
+
+      <Feature Id="F_Core" Title="Core Player" Level="1"
+               Description="Main executable and runtime libraries." Absent="disallow">
+        <ComponentGroupRef Id="CG_Core" />
+        <ComponentGroupRef Id="CG_Fonts" />
+        <ComponentGroupRef Id="CG_StartMenu" />
+      </Feature>
+
+      <Feature Id="F_FileAssoc" Title="File Associations" Level="1"
+               Description="Associate common video formats with Aurora Player.">
+        <ComponentGroupRef Id="CG_FileAssoc" />
+      </Feature>
+
+      <Feature Id="F_Models" Title="AI Models (Bundled Lite)" Level="1"
+               Description="Lightweight AI models for frame interpolation and upscaling.
+Full model pack can be downloaded via Tools > Download AI Models.">
+        <!-- Model components are added dynamically by build-installer.ps1 -->
+        <!-- Placeholder component to satisfy WiX requirement -->
+        <Component Id="C_ModelsMarker" Directory="DIR_MODELS"
+                   Guid="C7D8E9F0-A1B2-3456-4567-567890123456">
+          <RegistryValue Root="HKCU"
+                         Key="SOFTWARE\AuroraPlayer\Models"
+                         Name="BundledLite" Type="integer" Value="1"
+                         KeyPath="yes" />
+        </Component>
+      </Feature>
+
+    </Feature>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         LAUNCH CONDITION — Windows 10+ only
+         ════════════════════════════════════════════════════════════════════ -->
+    <Launch
+      Condition="VersionNT64 &gt;= 1000"
+      Message="Aurora Motion Player requires Windows 10 (64-bit) or later." />
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         INSTALL FINALIZE — notify shell of file assoc changes
+         ════════════════════════════════════════════════════════════════════ -->
+    <CustomAction Id="CA_RefreshShell"
+                  Directory="DIR_BIN"
+                  ExeCommand="[SystemFolder]cmd.exe /c ie4uinit.exe -show"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+
+    <InstallExecuteSequence>
+      <Custom Action="CA_RefreshShell" After="InstallFinalize">
+        NOT Installed OR REINSTALL
+      </Custom>
+    </InstallExecuteSequence>
+
+  </Package>
+</Wix>

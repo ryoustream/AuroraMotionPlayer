@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Aurora Motion Player — WiX Custom UI Extension
+  Extends WixUI_InstallDir with Aurora branding.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Fragment>
+    <!-- ── Custom UI flow: Welcome → License → InstallDir → Installing → Finish -->
+    <ui:WixUI Id="WixUI_Aurora">
+      <TextStyle Id="WixUI_Font_Normal"   FaceName="Segoe UI" Size="9" />
+      <TextStyle Id="WixUI_Font_Bigger"   FaceName="Segoe UI" Size="12" />
+      <TextStyle Id="WixUI_Font_Title"    FaceName="Segoe UI" Size="9" Bold="yes" />
+      <TextStyle Id="WixUI_Font_BigTitle" FaceName="Segoe UI" Size="14" Bold="yes" />
+
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+      <Property Id="WixUI_Mode"    Value="InstallDir" />
+
+      <!-- Dialog sequence -->
+      <DialogRef Id="WelcomeDlg" />
+      <DialogRef Id="LicenseAgreementDlg" />
+      <DialogRef Id="InstallDirDlg" />
+      <DialogRef Id="VerifyReadyDlg" />
+      <DialogRef Id="WaitForCostingDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ExitDlg" />
+      <DialogRef Id="UserExit" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+
+      <!-- Navigation wiring -->
+      <Publish Dialog="WelcomeDlg"         Control="Next"    Event="NewDialog"     Value="LicenseAgreementDlg" Order="2">1</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Back"   Event="NewDialog"     Value="WelcomeDlg">1</Publish>
+      <Publish Dialog="LicenseAgreementDlg" Control="Next"   Event="NewDialog"     Value="InstallDirDlg">LicenseAccepted = "1"</Publish>
+      <Publish Dialog="InstallDirDlg"       Control="Back"   Event="NewDialog"     Value="LicenseAgreementDlg">1</Publish>
+      <Publish Dialog="InstallDirDlg"       Control="Next"   Event="NewDialog"     Value="VerifyReadyDlg">1</Publish>
+      <Publish Dialog="VerifyReadyDlg"      Control="Back"   Event="NewDialog"     Value="InstallDirDlg">1</Publish>
+      <Publish Dialog="VerifyReadyDlg"      Control="Install" Event="EndDialog"    Value="Return">1</Publish>
+      <Publish Dialog="ExitDlg"            Control="Finish"  Event="EndDialog"     Value="Return" Order="999">1</Publish>
+
+      <!-- Launch after install checkbox -->
+      <Publish Dialog="ExitDlg" Control="Finish" Event="DoAction" Value="CA_LaunchApp">
+        WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed
+      </Publish>
+    </ui:WixUI>
+
+    <!-- Launch app after install -->
+    <CustomAction Id="CA_LaunchApp"
+                  Directory="DIR_BIN"
+                  ExeCommand="[DIR_BIN]AuroraPlayer.exe"
+                  Execute="immediate"
+                  Return="asyncNoWait"
+                  Impersonate="yes" />
+
+    <!-- License text (embedded) -->
+    <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+
+    <!-- UI images -->
+    <WixVariable Id="WixUIBannerBmp"   Value="banner.bmp"   />
+    <WixVariable Id="WixUIDialogBmp"   Value="dialog.bmp"   />
+  </Fragment>
+
+</Wix>

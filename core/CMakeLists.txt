@@ -81,6 +81,10 @@ add_library(aurora_core STATIC
     # Benchmark
     benchmark/BenchmarkSystem.cpp
     benchmark/FrameCounter.cpp
+
+    # GPU / CPU Monitor (Session 10)
+    gpu_monitor/GPUMonitor.cpp
+    gpu_monitor/CPUMonitor.cpp
 )
 
 target_include_directories(aurora_core
@@ -150,6 +154,8 @@ if(WIN32)
     target_compile_definitions(aurora_core PUBLIC AURORA_DX12=1)
     # WASAPI audio
     target_link_libraries(aurora_core PUBLIC ole32 avrt)
+    # GPU Monitor — PDH performance counters (Session 10)
+    target_link_libraries(aurora_core PUBLIC pdh)
 endif()
 
 # Android AAudio

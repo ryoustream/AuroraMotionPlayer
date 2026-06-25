@@ -681,3 +681,108 @@ jobs:
           | `SubtitleRenderer`  | Delegates text→FreeType, bitmap passthrough, fallback    | ✅ |
           | `SubtitleParser`    | parsePGS() now calls real PGSParser (was placeholder)    | ✅ |
           EOF
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # JOB 11 — Session 10: GPU Benchmark (GPUMonitor · CPUMonitor · Overlay)
+  # ════════════════════════════════════════════════════════════════════════════
+  session10-benchmark:
+    name: "📊 S10 — GPU Benchmark System"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            $APT_CORE \
+            libfreetype6-dev \
+            clang-14
+
+      - name: Configure
+        run: |
+          cmake -B build-s10 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang-14 \
+            -DCMAKE_CXX_COMPILER=clang++-14 \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DAURORA_BUILD_DESKTOP=OFF \
+            -DAURORA_BUILD_TESTS=ON \
+            -DAURORA_USE_VULKAN=OFF \
+            -DAURORA_NCNN=OFF \
+            -DAURORA_ONNX=OFF
+
+      - name: Build aurora_core (includes gpu_monitor)
+        run: cmake --build build-s10 --parallel 4 --target aurora_core
+
+      - name: Compile benchmark smoke test
+        run: |
+          clang++-14 -std=c++20 -I. \
+            tests/benchmark/test_benchmark_smoke.cpp \
+            core/benchmark/BenchmarkSystem.cpp \
+            core/benchmark/FrameCounter.cpp \
+            core/gpu_monitor/GPUMonitor.cpp \
+            core/gpu_monitor/CPUMonitor.cpp \
+            -o build-s10/benchmark_smoke \
+            -lpthread
+
+      - name: Run benchmark smoke test
+        run: ./build-s10/benchmark_smoke
+
+      - name: Verify S10 source files
+        run: |
+          FILES=(
+            "core/gpu_monitor/GPUMonitor.h"
+            "core/gpu_monitor/GPUMonitor.cpp"
+            "core/gpu_monitor/CPUMonitor.h"
+            "core/gpu_monitor/CPUMonitor.cpp"
+            "core/benchmark/BenchmarkSystem.h"
+            "core/benchmark/BenchmarkSystem.cpp"
+            "desktop/windows/src/BenchmarkOverlay.h"
+            "desktop/windows/src/BenchmarkOverlay.cpp"
+            "mobile/android/app/src/main/kotlin/com/aurora/player/benchmark/SystemMonitor.kt"
+            "mobile/android/app/src/main/kotlin/com/aurora/player/benchmark/BenchmarkViewModel.kt"
+            "mobile/android/app/src/main/kotlin/com/aurora/player/benchmark/BenchmarkOverlayView.kt"
+            "mobile/android/app/src/main/kotlin/com/aurora/player/benchmark/BenchmarkFragment.kt"
+            "tests/benchmark/test_benchmark_smoke.cpp"
+            ".github/workflows/benchmark.yml"
+          )
+          PASS=0; FAIL=0
+          for f in "${FILES[@]}"; do
+            if [ -f "$f" ]; then
+              echo "✅ $f"; PASS=$((PASS+1))
+            else
+              echo "❌ MISSING: $f"; FAIL=$((FAIL+1))
+            fi
+          done
+          echo ""
+          echo "Result: $PASS present, $FAIL missing"
+          [ $FAIL -eq 0 ] || exit 1
+
+      - name: S10 Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 📊 Session 10 — GPU Benchmark System
+          | Module | Description | Platform |
+          |---|---|---|
+          | `GPUMonitor` | NVML (dynamic), D3DKMT+PDH+DXGI, kgsl, Mali, DRM sysfs | Win/Linux/Android |
+          | `CPUMonitor` | /proc/stat (Linux/Android), GetSystemTimes (Win) | All |
+          | `BenchmarkSystem` | Upgraded: GPUMonitor integration, callback thread | All |
+          | `BenchmarkOverlay` | Full HUD: mini graphs, color bars, GPU name/temp/power | Windows Qt6 |
+          | `SystemMonitor.kt` | kgsl/Mali sysfs, /proc/stat, thermal zones | Android |
+          | `BenchmarkViewModel.kt` | LiveData coroutine polling, frame counters | Android |
+          | `BenchmarkOverlayView.kt` | Canvas HUD: FPS/GPU/CPU graphs | Android |
+          | `BenchmarkFragment.kt` | Overlay fragment, toggle show/hide | Android |
+          | `benchmark.yml` | Dedicated GHA: Linux+Windows+Android benchmark CI | CI/CD |
+          EOF
+
+      - name: Upload S10 test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults-S10-Benchmark
+          path: build-s10/
+          if-no-files-found: ignore
+          retention-days: 14

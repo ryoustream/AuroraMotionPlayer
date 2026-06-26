@@ -113,3 +113,6 @@ dist/
 *.key
 keystore.jks
 signing.properties
+
+# Allow model downloader script
+!models/download_models.py

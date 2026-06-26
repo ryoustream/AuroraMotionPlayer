@@ -1,0 +1,32 @@
+WEBVTT
+Aurora Motion Player — Sample VTT Subtitle Fixture
+
+NOTE
+This file is used for integration tests.
+It tests WEBVTT parsing including: cue IDs, NOTE blocks, and timing.
+
+00:00:01.000 --> 00:00:03.000
+Hello, Aurora Motion Player!
+
+intro
+00:00:03.500 --> 00:00:05.500
+Named cue ID example.
+
+00:00:06.000 --> 00:00:08.000 align:center
+Center-aligned cue with positioning.
+
+00:00:08.500 --> 00:00:10.000
+Multi-line cue text.
+Second line here.
+
+bold-test
+00:00:10.500 --> 00:00:12.000
+<b>Bold</b> and <i>italic</i> tags.
+
+NOTE Ignore this comment block entirely
+
+00:00:12.500 --> 00:00:14.500
+Unicode: こんにちは • Привет
+
+00:00:25.000 --> 00:00:30.000
+Final VTT cue. End of fixture.

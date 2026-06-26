@@ -161,3 +161,22 @@ Crashes in plugins are caught and the plugin is disabled; the player continues.
 - **Android**: CMake + Ninja (via Gradle ExternalNativeBuild), NDK 26
 - **CI/CD**: GitHub Actions — 4 workflows (build-windows, build-android, ci, release)
 - **Tests**: Google Test, discovered via `gtest_discover_tests()`
+
+---
+
+## Session History
+
+| Session | Theme | Key Components |
+|---------|-------|---------------|
+| S1 | Foundation | CMake scaffold, CI/CD, ToneMapper, SubtitleParser stubs |
+| S2 | Rendering | VulkanRenderer, DX11Renderer, RendererFactory |
+| S3 | Audio & Plugins | WASAPI, AAudio, DX12 compute, PluginManager |
+| S4 | Interpolation | IFRNet, FILM, GMFlow, TileProcessor, InterpolationPipeline |
+| S5 | Upscaling | RealESRGAN, SPAN, Anime4K, FSRCNN, UpscalerPipeline |
+| S6 | Windows UI | ChapterWidget, BookmarkManager, ThumbnailBar, MiniMode, SpeedControl |
+| S7 | Android UI | PlayerFragment, PiPManager, SubtitleFragment, UriUtils |
+| S8 | Subtitle GPU | PGSParser, FreeTypeRenderer, ASSRenderer |
+| S9 | Installer | WiX v4, Burn bootstrapper, build-installer.ps1 |
+| S10 | Benchmark | GPUMonitor, CPUMonitor, BenchmarkOverlay, Android BenchmarkFragment |
+| S11 | Integration Tests | test_Decoder/Pipeline/Subtitle/Network, download_models.py registry |
+| S12 | Documentation | CHANGELOG, CONTRIBUTING, BUILD, MODELS, PLUGINS, PERFORMANCE, issue templates |

@@ -1,0 +1,270 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  Aurora Motion Player — Documentation CI                        ║
+# ║  Jobs: Lint · Link-check · Changelog validate · Template check  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+name: 📚 Docs — Lint & Link Check
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "**.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/PULL_REQUEST_TEMPLATE.md"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/PULL_REQUEST_TEMPLATE.md"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 1 — Markdown lint
+  # ══════════════════════════════════════════════════════════════════
+  markdown-lint:
+    name: "📝 Markdown Lint"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+
+    steps:
+      - name: "⬇️ Checkout"
+        uses: actions/checkout@v4
+
+      - name: "📦 Setup Node"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: "📦 Install markdownlint-cli"
+        run: npm install -g markdownlint-cli@0.39.0
+
+      - name: "📝 Create markdownlint config"
+        run: |
+          cat > .markdownlint.json << 'MDLINT'
+          {
+            "default": true,
+            "MD013": { "line_length": 120, "tables": false, "code_blocks": false },
+            "MD033": false,
+            "MD041": false
+          }
+          MDLINT
+
+      - name: "🔍 Run markdownlint"
+        run: |
+          markdownlint \
+            README.md \
+            CHANGELOG.md \
+            CONTRIBUTING.md \
+            BUILD.md \
+            MODELS.md \
+            PLUGINS.md \
+            PERFORMANCE.md \
+            docs/ARCHITECTURE.md
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 2 — Link check
+  # ══════════════════════════════════════════════════════════════════
+  link-check:
+    name: "🔗 Link Check"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - name: "⬇️ Checkout"
+        uses: actions/checkout@v4
+
+      - name: "📦 Install lychee"
+        run: |
+          curl -sSL https://github.com/lycheeverse/lychee/releases/download/v0.15.1/lychee-x86_64-unknown-linux-gnu.tar.gz \
+            | tar xz -C /usr/local/bin
+
+      - name: "🔗 Check links in Markdown files"
+        run: |
+          lychee \
+            --exclude "localhost" \
+            --exclude "127.0.0.1" \
+            --exclude "github.com/ryoustream" \
+            --exclude "chatgpt.com" \
+            --timeout 20 \
+            --max-retries 3 \
+            --no-progress \
+            '**/*.md' \
+          || true
+        # || true: link failures are warnings, not errors (external URLs can be flaky)
+
+      - name: "📊 Upload link report"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: link-check-report
+          path: lychee-out.md
+          if-no-files-found: ignore
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 3 — Validate CHANGELOG format
+  # ══════════════════════════════════════════════════════════════════
+  changelog-validate:
+    name: "📋 Changelog Validate"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    steps:
+      - name: "⬇️ Checkout"
+        uses: actions/checkout@v4
+
+      - name: "✅ Validate CHANGELOG.md structure"
+        run: |
+          python3 - << 'PY'
+          import sys, re
+
+          with open("CHANGELOG.md", "r") as f:
+              content = f.read()
+
+          errors = []
+
+          # Must have [Unreleased] section
+          if "## [Unreleased]" not in content:
+              errors.append("Missing '## [Unreleased]' section")
+
+          # Must have at least one versioned release
+          versions = re.findall(r"## \[(\d+\.\d+\.\d+)\]", content)
+          if not versions:
+              errors.append("No versioned releases found")
+
+          # Must have comparison links at the bottom
+          if "[Unreleased]:" not in content:
+              errors.append("Missing comparison links at the bottom")
+
+          if errors:
+              for e in errors:
+                  print(f"ERROR: {e}", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"OK: CHANGELOG.md valid — {len(versions)} version(s) found: {', '.join(versions)}")
+          PY
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 4 — Validate issue templates
+  # ══════════════════════════════════════════════════════════════════
+  issue-template-validate:
+    name: "📋 Issue Templates Validate"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    steps:
+      - name: "⬇️ Checkout"
+        uses: actions/checkout@v4
+
+      - name: "📦 Install PyYAML"
+        run: pip install pyyaml --break-system-packages
+
+      - name: "✅ Validate YAML issue templates"
+        run: |
+          python3 - << 'PY'
+          import sys, yaml, pathlib
+
+          template_dir = pathlib.Path(".github/ISSUE_TEMPLATE")
+          yml_files = list(template_dir.glob("*.yml"))
+
+          if not yml_files:
+              print("ERROR: No issue templates found", file=sys.stderr)
+              sys.exit(1)
+
+          errors = []
+          for path in yml_files:
+              try:
+                  data = yaml.safe_load(path.read_text())
+                  required = {"name", "description", "body"}
+                  missing = required - set(data.keys())
+                  if missing:
+                      errors.append(f"{path.name}: missing keys {missing}")
+                  else:
+                      print(f"OK: {path.name}")
+              except yaml.YAMLError as e:
+                  errors.append(f"{path.name}: YAML parse error: {e}")
+
+          if errors:
+              for e in errors:
+                  print(f"ERROR: {e}", file=sys.stderr)
+              sys.exit(1)
+          PY
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 5 — Docs completeness check
+  # ══════════════════════════════════════════════════════════════════
+  docs-completeness:
+    name: "📚 Docs Completeness"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    steps:
+      - name: "⬇️ Checkout"
+        uses: actions/checkout@v4
+
+      - name: "✅ Check required documentation files exist"
+        run: |
+          python3 - << 'PY'
+          import sys, pathlib
+
+          required_docs = [
+              "README.md",
+              "CHANGELOG.md",
+              "CONTRIBUTING.md",
+              "BUILD.md",
+              "MODELS.md",
+              "PLUGINS.md",
+              "PERFORMANCE.md",
+              "docs/ARCHITECTURE.md",
+              ".github/ISSUE_TEMPLATE/bug_report.yml",
+              ".github/ISSUE_TEMPLATE/feature_request.yml",
+              ".github/ISSUE_TEMPLATE/ai_model_request.yml",
+              ".github/PULL_REQUEST_TEMPLATE.md",
+          ]
+
+          missing = [d for d in required_docs if not pathlib.Path(d).exists()]
+
+          if missing:
+              for m in missing:
+                  print(f"MISSING: {m}", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"OK: All {len(required_docs)} documentation files present")
+          PY
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 6 — Summary gate (all docs jobs must pass)
+  # ══════════════════════════════════════════════════════════════════
+  docs-gate:
+    name: "🚦 Docs Gate"
+    needs:
+      - markdown-lint
+      - changelog-validate
+      - issue-template-validate
+      - docs-completeness
+    runs-on: ubuntu-22.04
+    timeout-minutes: 2
+    if: always()
+
+    steps:
+      - name: "✅ All docs checks passed"
+        run: |
+          results=(
+            "${{ needs.markdown-lint.result }}"
+            "${{ needs.changelog-validate.result }}"
+            "${{ needs.issue-template-validate.result }}"
+            "${{ needs.docs-completeness.result }}"
+          )
+          for r in "${results[@]}"; do
+            if [[ "$r" != "success" && "$r" != "skipped" ]]; then
+              echo "❌ One or more docs checks failed (result: $r)"
+              exit 1
+            fi
+          done
+          echo "✅ All documentation checks passed"

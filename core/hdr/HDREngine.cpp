@@ -1,3 +1,4 @@
+#include <cstring>
 #include "HDREngine.h"
 #include <cmath>
 #include <algorithm>

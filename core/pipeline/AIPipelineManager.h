@@ -25,6 +25,7 @@
 #include <string>
 #include <thread>
 
+
 namespace aurora::core {
 
 // ── Pipeline configuration ────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ struct PipelineStats {
 enum class PipelineState { Idle, Running, Paused, Error };
 
 // ── Output callback ───────────────────────────────────────────────────────────
-using FrameOutputCb = std::function<void(std::shared_ptr<VideoFrame>)>;
+using FrameOutputCb = std::function<void(std::shared_ptr<aurora::video::VideoFrame>)>;
 
 // ── AI Pipeline Manager ───────────────────────────────────────────────────────
 class AIPipelineManager {
@@ -104,7 +105,7 @@ public:
     // ----- Frame input -------------------------------------------------------
     /// Push a decoded frame into the pipeline.
     /// Returns false if the input queue is full (caller should back-pressure).
-    bool pushFrame(std::shared_ptr<VideoFrame> frame);
+    bool pushFrame(std::shared_ptr<aurora::video::VideoFrame> frame);
 
     // ----- Output ------------------------------------------------------------
     void setOutputCallback(FrameOutputCb cb) { m_outputCb = std::move(cb); }
@@ -117,11 +118,11 @@ public:
 
 private:
     void processingLoop();
-    std::shared_ptr<VideoFrame> runDenoise(std::shared_ptr<VideoFrame> frame);
-    std::shared_ptr<VideoFrame> runUpscale(std::shared_ptr<VideoFrame> frame);
-    void                        runInterpolate(std::shared_ptr<VideoFrame> prev,
-                                               std::shared_ptr<VideoFrame> curr);
-    std::shared_ptr<VideoFrame> runToneMap(std::shared_ptr<VideoFrame> frame);
+    std::shared_ptr<aurora::video::VideoFrame> runDenoise(std::shared_ptr<aurora::video::VideoFrame> frame);
+    std::shared_ptr<aurora::video::VideoFrame> runUpscale(std::shared_ptr<aurora::video::VideoFrame> frame);
+    void                        runInterpolate(std::shared_ptr<aurora::video::VideoFrame> prev,
+                                               std::shared_ptr<aurora::video::VideoFrame> curr);
+    std::shared_ptr<aurora::video::VideoFrame> runToneMap(std::shared_ptr<aurora::video::VideoFrame> frame);
 
     // Config & state
     PipelineConfig               m_config;
@@ -131,7 +132,7 @@ private:
     // Input queue
     mutable std::mutex           m_inputMutex;
     std::condition_variable      m_inputCV;
-    std::queue<std::shared_ptr<VideoFrame>> m_inputQueue;
+    std::queue<std::shared_ptr<aurora::video::VideoFrame>> m_inputQueue;
 
     // Output
     FrameOutputCb                m_outputCb;
@@ -140,16 +141,16 @@ private:
     std::thread                  m_processThread;
 
     // Previous frame (for interpolation)
-    std::shared_ptr<VideoFrame>  m_prevFrame;
+    std::shared_ptr<aurora::video::VideoFrame>  m_prevFrame;
 
     // Stats (atomic-capable fields)
     mutable std::mutex           m_statsMutex;
     PipelineStats                m_stats;
 
     // Sub-systems
-    std::unique_ptr<HDREngine>       m_hdrEngine;
-    std::unique_ptr<AuroraFlow>      m_auroraFlow;
-    UpscalerFactory                  m_upscalerFactory;
+    std::unique_ptr<aurora::hdr::HDREngine>       m_hdrEngine;
+    std::unique_ptr<aurora::interpolation::AuroraFlow>      m_auroraFlow;
+    aurora::upscaler::UpscalerFactory                  m_upscalerFactory;
 };
 
 } // namespace aurora::core

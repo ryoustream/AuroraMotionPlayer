@@ -10,6 +10,8 @@
 #include <thread>
 
 using namespace aurora::core;
+using aurora::video::VideoFrame;
+using aurora::video::VideoFramePtr;
 
 // ── Construction ──────────────────────────────────────────────────────────────
 TEST(AIPipeline, ConstructsWithoutCrash) {
@@ -93,9 +95,7 @@ TEST(AIPipeline, PushFrameWhileRunning) {
 
     pm.start();
 
-    auto frame = std::make_shared<VideoFrame>();
-    frame->width  = 1920;
-    frame->height = 1080;
+    auto frame = std::make_shared<VideoFrame>(1920, 1080, aurora::video::PixelFormat::YUV420P);
     EXPECT_TRUE(pm.pushFrame(frame));
 
     // Give pipeline thread time to process
@@ -107,7 +107,7 @@ TEST(AIPipeline, PushFrameWhileRunning) {
 
 TEST(AIPipeline, PushFrameWhileIdleStillQueues) {
     AIPipelineManager pm;
-    auto frame = std::make_shared<VideoFrame>();
+    auto frame = std::make_shared<VideoFrame>(640, 480, aurora::video::PixelFormat::YUV420P);
     // Should not crash; frame queued but not processed
     EXPECT_TRUE(pm.pushFrame(frame));
 }
@@ -116,7 +116,7 @@ TEST(AIPipeline, PushFrameWhileIdleStillQueues) {
 TEST(AIPipeline, FlushDoesNotCrash) {
     AIPipelineManager pm;
     pm.start();
-    pm.pushFrame(std::make_shared<VideoFrame>());
+    pm.pushFrame(std::make_shared<VideoFrame>(640, 480, aurora::video::PixelFormat::YUV420P));
     EXPECT_NO_THROW(pm.flush());
     pm.stop();
 }
@@ -143,7 +143,7 @@ TEST(AIPipeline, DestructorStopsCleanly) {
     EXPECT_NO_THROW({
         AIPipelineManager pm;
         pm.start();
-        pm.pushFrame(std::make_shared<VideoFrame>());
+        pm.pushFrame(std::make_shared<VideoFrame>(640, 480, aurora::video::PixelFormat::YUV420P));
         // Destructor called here
     });
 }

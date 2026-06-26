@@ -2,6 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include <limits>
+#include <cstring>
 
 namespace aurora::interpolation {
 
@@ -46,7 +47,10 @@ MotionField MotionEstimator::blockMatching(video::VideoFramePtr f0,
                                 static_cast<int>(y1[(ry+y)*ls1 + (rx+x)]));
                         }
                     }
-                    if (sad < bestSAD) {
+                    // Prefer smaller displacement on tied SADs (center-bias)
+                    int disp2     = dx*dx + dy*dy;
+                    int bestDisp2 = bestDx*bestDx + bestDy*bestDy;
+                    if (sad < bestSAD || (sad == bestSAD && disp2 < bestDisp2)) {
                         bestSAD = sad;
                         bestDx  = dx;
                         bestDy  = dy;

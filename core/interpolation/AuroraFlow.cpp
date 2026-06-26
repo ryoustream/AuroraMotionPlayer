@@ -201,4 +201,10 @@ std::vector<std::string> AuroraFlow::availableModels(const std::string& modelDir
 float AuroraFlow::inputFPS()  const noexcept { return m_cfg.sourceFPS; }
 float AuroraFlow::outputFPS() const noexcept { return m_cfg.targetFPS; }
 
+// ── setConfig (Session 13 fix) ───────────────────────────────────────────────
+void AuroraFlow::setConfig(const InterpolationConfig& cfg) {
+    m_cfg = cfg;
+}
+
+
 } // namespace aurora::interpolation

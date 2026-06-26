@@ -23,7 +23,7 @@ TEST(BenchmarkSystem, FormatOutput) {
     BenchmarkSnapshot s;
     s.renderFPS = 60.0;
     s.decodeFPS = 30.0;
-    s.interpFPS = 60.0;
+    s.interpolateFPS = 60.0;
     auto str = BenchmarkSystem::format(s);
     EXPECT_NE(str.find("60.0"), std::string::npos);
     EXPECT_NE(str.find("Render"), std::string::npos);

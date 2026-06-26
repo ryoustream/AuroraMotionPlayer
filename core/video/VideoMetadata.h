@@ -2,6 +2,7 @@
 #include <string>
 #include <map>
 #include <cstdint>
+#include <vector>
 
 namespace aurora::video {
 

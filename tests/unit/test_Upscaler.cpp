@@ -1,3 +1,4 @@
+#include <numeric>
 // ─────────────────────────────────────────────────────────────────────────────
 // test_Upscaler.cpp  —  Aurora Motion Player
 // Unit tests for Session 5: upscaler inference pipeline.
@@ -337,7 +338,3 @@ TEST(FSRCNNTest, ProcessFallbackBilinear) {
     }
 }
 
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

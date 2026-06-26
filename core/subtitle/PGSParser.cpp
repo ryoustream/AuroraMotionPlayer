@@ -74,7 +74,9 @@ bool PGSParser::decodeRLE(const std::vector<uint8_t>& rle,
                 rgba[off+2] = b;
                 rgba[off+3] = a;
             }
-            if (++x >= w) { x = 0; ++y; }
+            ++x;
+            // Clamp x to width — row advance is done by explicit EOL marker
+            if (x > w) x = w;
         }
     };
 
@@ -88,7 +90,8 @@ bool PGSParser::decodeRLE(const std::vector<uint8_t>& rle,
             uint8_t b1 = rle[i++];
             if (b1 == 0x00) {
                 // End of line — move to next row
-                x = 0; ++y;
+                x = 0;
+                if (y < h) ++y;
             } else if (b1 < 0x40) {
                 // b1 transparent pixels
                 putPixels(0, b1);

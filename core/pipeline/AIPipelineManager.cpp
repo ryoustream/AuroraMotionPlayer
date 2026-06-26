@@ -1,5 +1,8 @@
 /**
  * Aurora Motion Player — AI Processing Pipeline Implementation
+ * Session 13 Fix: Corrected all type names to match actual headers.
+ * HDRConfig→DisplayCapabilities, ToneMappingMode→ToneMappingAlgorithm,
+ * AuroraFlowConfig→InterpolationConfig, configure()→init()/setConfig()
  */
 
 #include "AIPipelineManager.h"
@@ -11,13 +14,15 @@
 
 namespace aurora::core {
 
-using Clock = std::chrono::steady_clock;
-using Ms    = std::chrono::duration<float, std::milli>;
+// Type aliases matching the ACTUAL headers
+using VFPtr  = aurora::video::VideoFramePtr;
+using Clock  = std::chrono::steady_clock;
+using Ms     = std::chrono::duration<float, std::milli>;
 
 // ── Ctor / Dtor ───────────────────────────────────────────────────────────────
 AIPipelineManager::AIPipelineManager() {
-    m_hdrEngine   = std::make_unique<HDREngine>();
-    m_auroraFlow  = std::make_unique<AuroraFlow>();
+    m_hdrEngine  = std::make_unique<aurora::hdr::HDREngine>();
+    m_auroraFlow = std::make_unique<aurora::interpolation::AuroraFlow>();
 }
 
 AIPipelineManager::~AIPipelineManager() {
@@ -32,23 +37,35 @@ void AIPipelineManager::configure(const PipelineConfig& config) {
     }
     m_config = config;
 
-    // Apply HDR config
-    if (m_config.hdrEnabled) {
-        HDRConfig hdrCfg;
-        hdrCfg.enabled = true;
-        if      (m_config.toneMappingMode == "BT2390")  hdrCfg.tonemapMode = ToneMappingMode::BT2390;
-        else if (m_config.toneMappingMode == "Mobius")  hdrCfg.tonemapMode = ToneMappingMode::Mobius;
-        else if (m_config.toneMappingMode == "ACES")    hdrCfg.tonemapMode = ToneMappingMode::ACES;
-        else if (m_config.toneMappingMode == "Reinhard") hdrCfg.tonemapMode = ToneMappingMode::Reinhard;
-        m_hdrEngine->configure(hdrCfg);
+    // Apply HDR config using the actual HDREngine API
+    if (m_config.hdrEnabled && m_hdrEngine) {
+        aurora::hdr::DisplayCapabilities disp;
+        disp.isHDRCapable = true;
+        disp.maxLuminance = 1000.0f;
+        m_hdrEngine->init(disp);
+
+        // Map string to actual ToneMappingAlgorithm enum
+        using Algo = aurora::hdr::ToneMappingAlgorithm;
+        Algo algo = Algo::BT2390;
+        if      (m_config.toneMappingMode == "Mobius")   algo = Algo::Mobius;
+        else if (m_config.toneMappingMode == "ACES")     algo = Algo::ACES;
+        else if (m_config.toneMappingMode == "Reinhard") algo = Algo::Reinhard;
+        m_hdrEngine->setToneMapper(algo);
     }
 
-    // Apply AuroraFlow config
-    if (m_config.interpEnabled) {
-        AuroraFlowConfig afCfg;
-        afCfg.modelName  = m_config.interpModel;
-        afCfg.targetFPS  = m_config.targetFPS;
-        m_auroraFlow->configure(afCfg);
+    // Apply AuroraFlow config using InterpolationConfig (the actual type)
+    if (m_config.interpEnabled && m_auroraFlow) {
+        aurora::interpolation::InterpolationConfig icfg;
+        icfg.sourceFPS  = 24.0f;               // will be updated per-file
+        icfg.targetFPS  = m_config.targetFPS;
+        icfg.sceneDetect = m_config.adaptiveMotion;
+        // Map model name string to enum
+        using Model = aurora::interpolation::InterpolationModel;
+        icfg.model = Model::RIFE;
+        if      (m_config.interpModel == "IFRNet")  icfg.model = Model::IFRNet;
+        else if (m_config.interpModel == "FILM")    icfg.model = Model::FILM;
+        else if (m_config.interpModel == "GMFlow")  icfg.model = Model::GMFlow;
+        m_auroraFlow->setConfig(icfg);
     }
 }
 
@@ -62,7 +79,6 @@ bool AIPipelineManager::start() {
         }
         return false;
     }
-
     m_processThread = std::thread(&AIPipelineManager::processingLoop, this);
     std::cout << "[Pipeline] Started\n";
     return true;
@@ -90,7 +106,6 @@ void AIPipelineManager::stop() {
     std::lock_guard lock(m_inputMutex);
     while (!m_inputQueue.empty()) m_inputQueue.pop();
     m_prevFrame.reset();
-
     std::cout << "[Pipeline] Stopped\n";
 }
 
@@ -101,10 +116,9 @@ void AIPipelineManager::flush() {
 }
 
 // ── Push frame ────────────────────────────────────────────────────────────────
-bool AIPipelineManager::pushFrame(std::shared_ptr<VideoFrame> frame) {
+bool AIPipelineManager::pushFrame(aurora::video::VideoFramePtr frame) {
     std::lock_guard lock(m_inputMutex);
     if (static_cast<int>(m_inputQueue.size()) >= m_config.decodeQueueSize) {
-        // Drop oldest frame (back-pressure)
         m_inputQueue.pop();
         std::lock_guard sl(m_statsMutex);
         ++m_stats.droppedFrames;
@@ -117,29 +131,24 @@ bool AIPipelineManager::pushFrame(std::shared_ptr<VideoFrame> frame) {
 // ── Processing loop ───────────────────────────────────────────────────────────
 void AIPipelineManager::processingLoop() {
     while (true) {
-        // Wait for frame or stop
-        std::shared_ptr<VideoFrame> frame;
+        aurora::video::VideoFramePtr frame;
         {
             std::unique_lock lock(m_inputMutex);
             m_inputCV.wait(lock, [this] {
                 return !m_inputQueue.empty() ||
                        m_state.load() == PipelineState::Idle;
             });
-
-            if (m_inputQueue.empty()) break; // stop signal
+            if (m_inputQueue.empty()) break;
             frame = std::move(m_inputQueue.front());
             m_inputQueue.pop();
         }
 
-        // Handle pause
-        while (m_state.load() == PipelineState::Paused) {
+        while (m_state.load() == PipelineState::Paused)
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        }
         if (m_state.load() == PipelineState::Idle) break;
 
         auto t0 = Clock::now();
 
-        // --- Denoise ---------------------------------------------------------
         if (m_config.denoiseEnabled) {
             auto td = Clock::now();
             frame = runDenoise(frame);
@@ -148,7 +157,6 @@ void AIPipelineManager::processingLoop() {
             m_stats.denoiseLatencyMs = 0.9f * m_stats.denoiseLatencyMs + 0.1f * ms;
         }
 
-        // --- Upscale ---------------------------------------------------------
         if (m_config.upscaleEnabled) {
             auto tu = Clock::now();
             frame = runUpscale(frame);
@@ -157,7 +165,6 @@ void AIPipelineManager::processingLoop() {
             m_stats.upscaleLatencyMs = 0.9f * m_stats.upscaleLatencyMs + 0.1f * ms;
         }
 
-        // --- Frame interpolation ---------------------------------------------
         if (m_config.interpEnabled && m_prevFrame) {
             bool scenecut = m_sceneChanged.exchange(false);
             if (!scenecut || !m_config.adaptiveMotion) {
@@ -170,7 +177,6 @@ void AIPipelineManager::processingLoop() {
             }
         }
 
-        // --- Tone mapping ----------------------------------------------------
         if (m_config.hdrEnabled) {
             auto tt = Clock::now();
             frame = runToneMap(frame);
@@ -179,12 +185,10 @@ void AIPipelineManager::processingLoop() {
             m_stats.toneMappingLatencyMs = 0.9f * m_stats.toneMappingLatencyMs + 0.1f * ms;
         }
 
-        // --- Output ----------------------------------------------------------
         m_prevFrame = frame;
         if (m_outputCb) {
-            try {
-                m_outputCb(frame);
-            } catch (const std::exception& e) {
+            try { m_outputCb(frame); }
+            catch (const std::exception& e) {
                 std::cerr << "[Pipeline] Output callback threw: " << e.what() << "\n";
             }
         }
@@ -199,34 +203,39 @@ void AIPipelineManager::processingLoop() {
     }
 }
 
-// ── Stage implementations (stubs — integrate real backends) ──────────────────
-std::shared_ptr<VideoFrame> AIPipelineManager::runDenoise(std::shared_ptr<VideoFrame> frame) {
-    // TODO: integrate NCNN-based spatial denoiser
-    // For now, pass-through
+// ── Stage implementations (stubs — integrate real backends when libs present) ─
+aurora::video::VideoFramePtr
+AIPipelineManager::runDenoise(aurora::video::VideoFramePtr frame) {
+    return frame; // pass-through until NCNN denoiser is wired
+}
+
+aurora::video::VideoFramePtr
+AIPipelineManager::runUpscale(aurora::video::VideoFramePtr frame) {
+    return frame; // pass-through until UpscalerFactory is wired
+}
+
+void AIPipelineManager::runInterpolate(aurora::video::VideoFramePtr prev,
+                                        aurora::video::VideoFramePtr curr) {
+    // AuroraFlow interpolates between prev and curr and calls the output callback
+    if (m_auroraFlow) {
+        m_auroraFlow->push(prev);
+        m_auroraFlow->push(curr);
+    } else {
+        // fallback: emit curr directly
+        if (m_outputCb) m_outputCb(curr);
+    }
+}
+
+aurora::video::VideoFramePtr
+AIPipelineManager::runToneMap(aurora::video::VideoFramePtr frame) {
+    if (m_hdrEngine && frame) {
+        aurora::hdr::HDRMetadata meta; // uses defaults (HDR10)
+        return m_hdrEngine->process(frame, meta);
+    }
     return frame;
 }
 
-std::shared_ptr<VideoFrame> AIPipelineManager::runUpscale(std::shared_ptr<VideoFrame> frame) {
-    // TODO: route to UpscalerFactory based on m_config.upscalerName
-    // auto* up = m_upscalerFactory.create(m_config.upscalerName);
-    // return up->upscale(frame, m_config.upscaleScale);
-    return frame;
-}
-
-void AIPipelineManager::runInterpolate(std::shared_ptr<VideoFrame> prev,
-                                        std::shared_ptr<VideoFrame> curr) {
-    // TODO: route to AuroraFlow
-    // m_auroraFlow->interpolate(prev, curr, outputCb);
-    (void)prev; (void)curr;
-}
-
-std::shared_ptr<VideoFrame> AIPipelineManager::runToneMap(std::shared_ptr<VideoFrame> frame) {
-    // TODO: route to HDREngine
-    // return m_hdrEngine->process(frame);
-    return frame;
-}
-
-// ── Scene change notification ─────────────────────────────────────────────────
+// ── Scene change ──────────────────────────────────────────────────────────────
 void AIPipelineManager::onSceneChange() {
     m_sceneChanged.store(true);
 }

@@ -1,3 +1,5 @@
+#include <cmath>
+#include <algorithm>
 #include "SceneDetector.h"
 
 // SceneClassifier is part of SceneDetector module

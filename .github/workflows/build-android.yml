@@ -223,7 +223,7 @@ jobs:
       # 8. SIGN APK (Release only — requires secrets)
       # ─────────────────────────────────────────────────────────────────────
       - name: "⑧ Sign APK"
-        if: env.BUILD_VARIANT == 'release' && secrets.KEYSTORE_BASE64 != ''
+        if: env.BUILD_VARIANT == 'release' && env.KEYSTORE_BASE64 != ''
         env:
           KEYSTORE_BASE64:   ${{ secrets.KEYSTORE_BASE64 }}
           KEY_ALIAS:         ${{ secrets.KEY_ALIAS }}

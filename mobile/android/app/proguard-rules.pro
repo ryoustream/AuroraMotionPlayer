@@ -38,3 +38,26 @@
     public static int d(...);
     public static int i(...);
 }
+
+# ── Session 13 additions ──────────────────────────────────────────────────────
+# Keep benchmark classes (used via reflection in BenchmarkFragment)
+-keep class com.aurora.player.benchmark.** { *; }
+
+# Keep subtitle classes
+-keep class com.aurora.player.subtitle.** { *; }
+
+# Keep UriUtils (called from PlayerFragment via reflection path)
+-keep class com.aurora.player.util.UriUtils { *; }
+
+# Prevent R8 from removing PiP actions (called from system process)
+-keep class com.aurora.player.ui.pip.PiPManager { *; }
+
+# Keep coroutine state machines from being obfuscated (causes crash on some devices)
+-keepclassmembers class * extends kotlinx.coroutines.CoroutineScope {
+    public *;
+}
+-keepnames class kotlinx.coroutines.** { *; }
+
+# Keep Glide generated API
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep class * extends com.bumptech.glide.module.AppGlideModule { <init>(...); }

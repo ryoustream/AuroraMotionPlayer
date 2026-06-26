@@ -96,4 +96,34 @@
 
     </application>
 
+
+    <!-- Package visibility queries required for Android 11+ (API 30) -->
+    <!-- Allows Aurora to discover media apps, subtitle apps, browsers -->
+    <queries>
+        <!-- Any app that can play audio/video -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="video/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="audio/*" />
+        </intent>
+        <!-- File managers -->
+        <intent>
+            <action android:name="android.intent.action.GET_CONTENT" />
+            <data android:mimeType="*/*" />
+        </intent>
+        <!-- Browsers (for subtitle download) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- Share targets -->
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="video/*" />
+        </intent>
+    </queries>
+
 </manifest>

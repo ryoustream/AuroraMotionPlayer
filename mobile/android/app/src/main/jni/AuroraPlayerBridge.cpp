@@ -1,8 +1,19 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  Aurora Motion Player — JNI Player Bridge Implementation        ║
+// ║  Session 13 Fix: AURORA_STUB_FFMPEG path for CI smoke builds    ║
+// ╚══════════════════════════════════════════════════════════════════╝
 #include "AuroraPlayerBridge.h"
 #include <android/log.h>
+#include <algorithm>
+#include <cmath>
 
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "AuroraBridge", __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,"AuroraBridge", __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,  "AuroraBridge", __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "AuroraBridge", __VA_ARGS__)
+
+// ════════════════════════════════════════════════════════════════════
+// FULL build path (real FFmpeg + NCNN prebuilts available)
+// ════════════════════════════════════════════════════════════════════
+#ifndef AURORA_STUB_FFMPEG
 
 AuroraPlayerBridge::AuroraPlayerBridge() {
     // Init decoder
@@ -14,7 +25,7 @@ AuroraPlayerBridge::AuroraPlayerBridge() {
     });
     m_decoder->setErrorCallback([](const std::string& e) { LOGE("%s", e.c_str()); });
 
-    // AI Flow
+    // AI Frame Interpolation
     m_flow = std::make_unique<aurora::interpolation::AuroraFlow>();
     m_flow->setOutputCallback([this](aurora::video::VideoFramePtr f) {
         renderFrameToSurface(f);
@@ -31,7 +42,7 @@ AuroraPlayerBridge::AuroraPlayerBridge() {
     // Benchmark
     m_bench = std::make_unique<aurora::benchmark::BenchmarkSystem>();
 
-    LOGI("AuroraPlayerBridge created");
+    LOGI("AuroraPlayerBridge created (full mode)");
 }
 
 AuroraPlayerBridge::~AuroraPlayerBridge() {
@@ -46,7 +57,6 @@ void AuroraPlayerBridge::setSurface(ANativeWindow* window) {
     if (m_window) ANativeWindow_release(m_window);
     m_window = window;
     if (m_window) ANativeWindow_acquire(m_window);
-    // Re-init renderer if needed
 }
 
 void AuroraPlayerBridge::resize(int w, int h) {
@@ -104,19 +114,14 @@ void AuroraPlayerBridge::setVolume(int percent) {
 
 void AuroraPlayerBridge::setInterpolation(bool enabled, float targetFPS) {
     m_interpEnabled = enabled;
-    if (m_flow) {
-        auto cfg = m_flow->inputFPS();
-        (void)cfg;
-        // Update target fps in flow config
-        // m_flow->setConfig(...)
-    }
+    (void)targetFPS;
 }
 
 void AuroraPlayerBridge::setUpscaler(const std::string& model) {
     aurora::upscaler::UpscaleModel m = aurora::upscaler::UpscaleModel::RealESRGAN;
-    if (model == "Anime4K")   m = aurora::upscaler::UpscaleModel::Anime4K;
-    else if (model == "SPAN") m = aurora::upscaler::UpscaleModel::SPAN;
-    else if (model == "FSRCNN") m = aurora::upscaler::UpscaleModel::FSRCNN;
+    if      (model == "Anime4K") m = aurora::upscaler::UpscaleModel::Anime4K;
+    else if (model == "SPAN")    m = aurora::upscaler::UpscaleModel::SPAN;
+    else if (model == "FSRCNN")  m = aurora::upscaler::UpscaleModel::FSRCNN;
     m_upscaler = aurora::upscaler::UpscalerFactory::create(m);
 }
 
@@ -148,7 +153,6 @@ void AuroraPlayerBridge::renderFrameToSurface(aurora::video::VideoFramePtr frame
     ARect bounds = {0, 0, m_width, m_height};
     if (ANativeWindow_lock(m_window, &buf, &bounds) != 0) return;
 
-    // Simple YUV→RGBA blit (full implementation uses Vulkan/OpenGL ES shader)
     const uint8_t* y  = frame->data(0);
     const uint8_t* cb = frame->data(1);
     const uint8_t* cr = frame->data(2);
@@ -162,19 +166,53 @@ void AuroraPlayerBridge::renderFrameToSurface(aurora::video::VideoFramePtr frame
 
     for (int row = 0; row < fh; ++row) {
         for (int col = 0; col < fw; ++col) {
-            float yv  = (y[row  * ls_y  + col]              - 16)  / 219.0f;
-            float cbv = (cb[(row/2) * ls_cb + (col/2)]      - 128) / 224.0f;
-            float crv = (cr[(row/2) * ls_cb + (col/2)]      - 128) / 224.0f;
+            float yv  = (y [row      * ls_y  + col      ] - 16)  / 219.0f;
+            float cbv = (cb[(row/2)  * ls_cb + (col/2)  ] - 128) / 224.0f;
+            float crv = (cr[(row/2)  * ls_cb + (col/2)  ] - 128) / 224.0f;
             auto clamp255 = [](float v) -> uint8_t {
                 return static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, v * 255.0f)));
             };
             uint8_t r = clamp255(yv + 1.5748f * crv);
             uint8_t g = clamp255(yv - 0.1873f * cbv - 0.4681f * crv);
             uint8_t b = clamp255(yv + 1.8556f * cbv);
-            dst[row * buf.stride + col] = (0xFF << 24) | (r << 16) | (g << 8) | b;
+            dst[row * buf.stride + col] = (0xFFu << 24) | (r << 16) | (g << 8) | b;
         }
     }
     ANativeWindow_unlockAndPost(m_window);
     m_bench->onRenderEnd();
     m_bench->onFrameRendered();
 }
+
+// ════════════════════════════════════════════════════════════════════
+// STUB build path (CI smoke mode — no prebuilt libs)
+// All methods are no-ops; APK compiles and links cleanly.
+// ════════════════════════════════════════════════════════════════════
+#else  // AURORA_STUB_FFMPEG
+
+AuroraPlayerBridge::AuroraPlayerBridge() {
+    m_bench = std::make_unique<aurora::benchmark::BenchmarkSystem>();
+    LOGI("AuroraPlayerBridge created (STUB / CI mode — no FFmpeg prebuilt)");
+}
+
+AuroraPlayerBridge::~AuroraPlayerBridge() {
+    if (m_window) { ANativeWindow_release(m_window); m_window = nullptr; }
+}
+
+void   AuroraPlayerBridge::setSurface(ANativeWindow* w)  { m_window = w; }
+void   AuroraPlayerBridge::resize(int w, int h)          { m_width=w; m_height=h; }
+bool   AuroraPlayerBridge::open(const std::string&)      { return false; }
+void   AuroraPlayerBridge::play()                        {}
+void   AuroraPlayerBridge::pause()                       {}
+void   AuroraPlayerBridge::stop()                        {}
+void   AuroraPlayerBridge::seek(double)                  {}
+double AuroraPlayerBridge::position()              const { return 0.0; }
+double AuroraPlayerBridge::duration()              const { return 0.0; }
+void   AuroraPlayerBridge::setVolume(int)                {}
+void   AuroraPlayerBridge::setInterpolation(bool, float) {}
+void   AuroraPlayerBridge::setUpscaler(const std::string&) {}
+void   AuroraPlayerBridge::loadSubtitle(const std::string&) {}
+std::string AuroraPlayerBridge::getBenchmarkStats() const { return "{}"; }
+void   AuroraPlayerBridge::onVideoFrame(aurora::video::VideoFramePtr) {}
+void   AuroraPlayerBridge::renderFrameToSurface(aurora::video::VideoFramePtr) {}
+
+#endif // AURORA_STUB_FFMPEG

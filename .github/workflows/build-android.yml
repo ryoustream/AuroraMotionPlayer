@@ -63,6 +63,13 @@ jobs:
           distribution: temurin
           cache: gradle
 
+      - name: "② Setup Gradle (official action — handles wrapper jar)"
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: wrapper
+          cache-read-only: false
+          build-root-directory: mobile/android
+
       - name: "② Setup Android SDK"
         uses: android-actions/setup-android@v3
 
@@ -146,20 +153,52 @@ jobs:
         working-directory: mobile/android
         run: |
           mkdir -p gradle/wrapper
+          # gradle-wrapper.jar is committed to the repo (Session 13 fix).
+          # Validate it is present and is a real JAR (zip magic bytes).
+          if [ -f gradle/wrapper/gradle-wrapper.jar ]; then
+            SIZE=$(stat -c%s gradle/wrapper/gradle-wrapper.jar)
+            if [ "$SIZE" -gt 10000 ]; then
+              echo "✓ gradle-wrapper.jar present (${SIZE} bytes)"
+            else
+              echo "⚠ gradle-wrapper.jar too small (${SIZE} bytes) — re-downloading..."
+              rm -f gradle/wrapper/gradle-wrapper.jar
+            fi
+          fi
           if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            echo "⬇ Downloading gradle-wrapper.jar..."
+            echo "⬇ Downloading gradle-wrapper.jar from gradle/gradle releases..."
             curl -sL \
-              "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
-              -o gradle/wrapper/gradle-wrapper.jar --retry 3
+              "https://raw.githubusercontent.com/gradle/gradle/refs/tags/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+              -o gradle/wrapper/gradle-wrapper.jar --retry 5 --retry-delay 3
+            SIZE=$(stat -c%s gradle/wrapper/gradle-wrapper.jar 2>/dev/null || echo 0)
+            if [ "$SIZE" -lt 10000 ]; then
+              echo "❌ gradle-wrapper.jar download failed (size=${SIZE})"
+              exit 1
+            fi
+            echo "✓ gradle-wrapper.jar downloaded (${SIZE} bytes)"
           fi
           chmod +x gradlew
+          echo "✓ Gradle wrapper ready"
           echo "✓ Gradle wrapper ready"
 
       # ─────────────────────────────────────────────────────────────────────
       # 6. BUILD
       # ─────────────────────────────────────────────────────────────────────
+      - name: "⑥ Pre-build validation"
+        run: |
+          echo "=== Environment ==="
+          echo "NDK: $ANDROID_NDK_HOME"
+          echo "SDK: $ANDROID_HOME"
+          ls -la mobile/android/gradle/wrapper/
+          echo "=== JNI sources ==="
+          ls mobile/android/app/src/main/jni/
+          echo "=== Key Kotlin files ==="
+          find mobile/android/app/src/main/kotlin -name "*.kt" | sort
+          echo "✓ Pre-build validation complete"
+
       - name: "⑥ Gradle · assemble ${{ env.BUILD_VARIANT }}"
         working-directory: mobile/android
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: |
           VARIANT="${BUILD_VARIANT}"
           CAP="$(echo "$VARIANT" | sed 's/\b./\u&/')"

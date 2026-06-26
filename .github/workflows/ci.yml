@@ -496,6 +496,12 @@ jobs:
           distribution: temurin
           cache: gradle
 
+      - name: Setup Gradle (handles wrapper jar)
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: wrapper
+          build-root-directory: mobile/android
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
@@ -520,10 +526,20 @@ jobs:
         working-directory: mobile/android
         run: |
           mkdir -p gradle/wrapper
+          # gradle-wrapper.jar is committed (Session 13 fix).
+          if [ -f gradle/wrapper/gradle-wrapper.jar ]; then
+            SIZE=$(stat -c%s gradle/wrapper/gradle-wrapper.jar)
+            if [ "$SIZE" -gt 10000 ]; then
+              echo "✓ gradle-wrapper.jar present (${SIZE} bytes)"
+            else
+              rm -f gradle/wrapper/gradle-wrapper.jar
+            fi
+          fi
           if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
             curl -sL \
-              "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
-              -o gradle/wrapper/gradle-wrapper.jar --retry 3
+              "https://raw.githubusercontent.com/gradle/gradle/refs/tags/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+              -o gradle/wrapper/gradle-wrapper.jar --retry 5 --retry-delay 3
+            echo "✓ gradle-wrapper.jar downloaded"
           fi
           chmod +x gradlew
 

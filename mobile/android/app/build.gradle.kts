@@ -23,13 +23,14 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags += listOf("-std=c++20", "-O2", "-march=armv8-a+simd")
+                cppFlags += listOf("-std=c++20", "-O2")
                 arguments += listOf(
                     "-DANDROID=ON",
                     "-DANDROID_PLATFORM=android-30",
                     "-DANDROID_STL=c++_shared",
-                    "-DAURORA_USE_VULKAN=ON",
-                    "-DAURORA_NCNN=ON"
+                    "-DAURORA_USE_VULKAN=ON"
+                    // AURORA_NCNN is auto-detected by CMakeLists.txt based on
+                    // prebuilt library presence — do not force ON here.
                 )
             }
         }
@@ -51,7 +52,7 @@ android {
     externalNativeBuild {
         cmake {
             path    = file("src/main/jni/CMakeLists.txt")
-            version = "3.25.0+"
+            version = "3.25.0"
         }
     }
 

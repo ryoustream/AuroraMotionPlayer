@@ -19,14 +19,14 @@ extern "C" {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 JNIEXPORT jlong JNICALL
-Java_com_aurora_player_NativePlayer_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+Java_com_aurora_player_player_NativePlayer_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
     LOGI("nativeCreate");
     g_player = std::make_unique<AuroraPlayerBridge>();
     return reinterpret_cast<jlong>(g_player.get());
 }
 
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeDestroy(JNIEnv* /*env*/, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeDestroy(JNIEnv* /*env*/, jobject /*thiz*/,
                                                    jlong handle) {
     LOGI("nativeDestroy");
     (void)handle;
@@ -35,7 +35,7 @@ Java_com_aurora_player_NativePlayer_nativeDestroy(JNIEnv* /*env*/, jobject /*thi
 
 // ── Surface ───────────────────────────────────────────────────────────────────
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeSurfaceCreated(JNIEnv* env, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeSurfaceCreated(JNIEnv* env, jobject /*thiz*/,
                                                           jlong handle, jobject surface) {
     ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
     if (!window) { LOGE("Failed to get ANativeWindow"); return; }
@@ -45,7 +45,7 @@ Java_com_aurora_player_NativePlayer_nativeSurfaceCreated(JNIEnv* env, jobject /*
 }
 
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeSurfaceChanged(JNIEnv* /*env*/, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeSurfaceChanged(JNIEnv* /*env*/, jobject /*thiz*/,
                                                           jlong handle, jint width, jint height) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (player) player->resize(width, height);
@@ -53,7 +53,7 @@ Java_com_aurora_player_NativePlayer_nativeSurfaceChanged(JNIEnv* /*env*/, jobjec
 }
 
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeSurfaceDestroyed(JNIEnv* /*env*/, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeSurfaceDestroyed(JNIEnv* /*env*/, jobject /*thiz*/,
                                                             jlong handle) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (player) player->setSurface(nullptr);
@@ -62,7 +62,7 @@ Java_com_aurora_player_NativePlayer_nativeSurfaceDestroyed(JNIEnv* /*env*/, jobj
 
 // ── Playback ──────────────────────────────────────────────────────────────────
 JNIEXPORT jboolean JNICALL
-Java_com_aurora_player_NativePlayer_nativeOpen(JNIEnv* env, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeOpen(JNIEnv* env, jobject /*thiz*/,
                                                 jlong handle, jstring path) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (!player) return JNI_FALSE;
@@ -73,46 +73,46 @@ Java_com_aurora_player_NativePlayer_nativeOpen(JNIEnv* env, jobject /*thiz*/,
 }
 
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativePlay(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
+Java_com_aurora_player_player_NativePlayer_nativePlay(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (player) player->play();
 }
 
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativePause(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
+Java_com_aurora_player_player_NativePlayer_nativePause(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (player) player->pause();
 }
 
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeStop(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
+Java_com_aurora_player_player_NativePlayer_nativeStop(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (player) player->stop();
 }
 
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeSeek(JNIEnv* /*env*/, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeSeek(JNIEnv* /*env*/, jobject /*thiz*/,
                                                 jlong handle, jdouble seconds) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (player) player->seek(seconds);
 }
 
 JNIEXPORT jdouble JNICALL
-Java_com_aurora_player_NativePlayer_nativeGetPosition(JNIEnv* /*env*/, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeGetPosition(JNIEnv* /*env*/, jobject /*thiz*/,
                                                        jlong handle) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     return player ? player->position() : 0.0;
 }
 
 JNIEXPORT jdouble JNICALL
-Java_com_aurora_player_NativePlayer_nativeGetDuration(JNIEnv* /*env*/, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeGetDuration(JNIEnv* /*env*/, jobject /*thiz*/,
                                                        jlong handle) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     return player ? player->duration() : 0.0;
 }
 
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeSetVolume(JNIEnv* /*env*/, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeSetVolume(JNIEnv* /*env*/, jobject /*thiz*/,
                                                      jlong handle, jint percent) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (player) player->setVolume(percent);
@@ -120,7 +120,7 @@ Java_com_aurora_player_NativePlayer_nativeSetVolume(JNIEnv* /*env*/, jobject /*t
 
 // ── AI Config ─────────────────────────────────────────────────────────────────
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeSetInterpolation(JNIEnv* /*env*/, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeSetInterpolation(JNIEnv* /*env*/, jobject /*thiz*/,
                                                             jlong handle,
                                                             jboolean enabled, jfloat targetFPS) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
@@ -128,7 +128,7 @@ Java_com_aurora_player_NativePlayer_nativeSetInterpolation(JNIEnv* /*env*/, jobj
 }
 
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeSetUpscaler(JNIEnv* env, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeSetUpscaler(JNIEnv* env, jobject /*thiz*/,
                                                        jlong handle, jstring model) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (!player) return;
@@ -139,7 +139,7 @@ Java_com_aurora_player_NativePlayer_nativeSetUpscaler(JNIEnv* env, jobject /*thi
 
 // ── Subtitle ──────────────────────────────────────────────────────────────────
 JNIEXPORT void JNICALL
-Java_com_aurora_player_NativePlayer_nativeLoadSubtitle(JNIEnv* env, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeLoadSubtitle(JNIEnv* env, jobject /*thiz*/,
                                                         jlong handle, jstring path) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     if (!player) return;
@@ -150,7 +150,7 @@ Java_com_aurora_player_NativePlayer_nativeLoadSubtitle(JNIEnv* env, jobject /*th
 
 // ── Benchmark ─────────────────────────────────────────────────────────────────
 JNIEXPORT jstring JNICALL
-Java_com_aurora_player_NativePlayer_nativeGetBenchmarkStats(JNIEnv* env, jobject /*thiz*/,
+Java_com_aurora_player_player_NativePlayer_nativeGetBenchmarkStats(JNIEnv* env, jobject /*thiz*/,
                                                              jlong handle) {
     auto* player = reinterpret_cast<AuroraPlayerBridge*>(handle);
     std::string stats = player ? player->getBenchmarkStats() : "";

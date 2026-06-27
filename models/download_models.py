@@ -354,9 +354,14 @@ class FixtureGenerator:
             warn(f"FFmpeg command failed: {e}")
             return False
 
-    def generate_all(self) -> None:
+    def generate_all(self, skip_ffmpeg: bool = False) -> None:
         header(f"Generating test fixtures in {self.fixture_dir}/")
         self.fixture_dir.mkdir(parents=True, exist_ok=True)
+
+        if skip_ffmpeg:
+            info("--no-ffmpeg set — generating text fixtures only")
+            self._create_text_fixtures()
+            return
 
         if not self.ffmpeg_avail:
             warn("FFmpeg not found — skipping video fixture generation")
@@ -483,8 +488,8 @@ def main() -> None:
         results = manager.download_all(tags=args.tag)
         print_summary(results, "Model Downloads")
 
-    if not args.models_only and not args.no_ffmpeg:
-        generator.generate_all()
+    if not args.models_only:
+        generator.generate_all(skip_ffmpeg=args.no_ffmpeg)
         ok("Fixtures ready")
 
     print(f"\n{GREEN}{BOLD}✅ All done!{RESET}")

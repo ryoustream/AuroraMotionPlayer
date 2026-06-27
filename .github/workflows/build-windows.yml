@@ -63,14 +63,14 @@ jobs:
           path: |
             ${{ env.VCPKG_ROOT }}
             ${{ env.VCPKG_CACHE }}
-          key:          vcpkg-win64-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}-v5
+          key:          vcpkg-win64-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}-v6
           restore-keys: vcpkg-win64-
 
       - name: "② Cache · CMake build"
         uses: actions/cache@v4
         with:
           path: build
-          key:          cmake-win64-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt', 'desktop/windows/CMakeLists.txt', 'core/**/*.h') }}-v3
+          key:          cmake-win64-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt', 'desktop/windows/CMakeLists.txt', 'core/**/*.h') }}-v4
           restore-keys: cmake-win64-${{ env.BUILD_TYPE }}-
 
       - name: "② Cache · Vulkan SDK"
@@ -78,7 +78,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: C:\VulkanSDK\${{ env.VULKAN_VER }}
-          key:  vulkan-sdk-${{ env.VULKAN_VER }}-v2
+          key:  vulkan-sdk-${{ env.VULKAN_VER }}-v3
 
       # ─────────────────────────────────────────────────────────────────────
       # 3. TOOLS
@@ -125,22 +125,41 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────
       # 4. DEPENDENCIES (vcpkg)
       # ─────────────────────────────────────────────────────────────────────
-      - name: "④ Install FFmpeg via vcpkg"
+      - name: "④ Install FFmpeg (pre-built gyan.dev)"
         run: |
-          & $env:VCPKG_EXE install `
-            "ffmpeg[core,avcodec,avformat,avutil,swscale,swresample,avdevice]:x64-windows" `
-            --triplet x64-windows `
-            --binarysource="clear;files,$env:VCPKG_CACHE,readwrite" `
-            --no-print-usage
-          echo "FFMPEG_PREFIX=$env:VCPKG_ROOT\installed\x64-windows" >> $env:GITHUB_ENV
+          # Use Gyan.dev pre-built FFmpeg shared build — avoids vcpkg Python dependency
+          $ffmpegVer = "7.1"
+          $ffmpegZip = "$env:TEMP\ffmpeg-shared.zip"
+          $ffmpegDir = "$env:GITHUB_WORKSPACE\ffmpeg-shared"
+          $url = "https://github.com/GyanD/codexffmpeg/releases/download/$ffmpegVer/ffmpeg-$ffmpegVer-full_build-shared.zip"
 
-      - name: "④ Install ONNX Runtime via vcpkg"
+          Write-Host "Downloading FFmpeg $ffmpegVer pre-built shared..."
+          Invoke-WebRequest -Uri $url -OutFile $ffmpegZip -TimeoutSec 300
+          Expand-Archive -Path $ffmpegZip -DestinationPath $env:GITHUB_WORKSPACE -Force
+
+          $extracted = Get-ChildItem "$env:GITHUB_WORKSPACE" -Directory -Filter "ffmpeg-$ffmpegVer*" | Select-Object -First 1
+          Rename-Item $extracted.FullName $ffmpegDir -ErrorAction SilentlyContinue
+
+          echo "FFMPEG_PREFIX=$ffmpegDir" >> $env:GITHUB_ENV
+          echo "$ffmpegDir\bin" >> $env:GITHUB_PATH
+          Write-Host "✓ FFmpeg at $ffmpegDir"
+
+      - name: "④ Install ONNX Runtime (pre-built)"
         run: |
-          & $env:VCPKG_EXE install `
-            "onnxruntime:x64-windows" `
-            --triplet x64-windows `
-            --binarysource="clear;files,$env:VCPKG_CACHE,readwrite" `
-            --no-print-usage
+          $onnxVer = "1.19.2"
+          $onnxZip  = "$env:TEMP\onnxruntime.zip"
+          $onnxDir  = "$env:GITHUB_WORKSPACE\onnxruntime"
+          $url = "https://github.com/microsoft/onnxruntime/releases/download/v$onnxVer/onnxruntime-win-x64-$onnxVer.zip"
+
+          Write-Host "Downloading ONNX Runtime $onnxVer..."
+          Invoke-WebRequest -Uri $url -OutFile $onnxZip -TimeoutSec 180
+          Expand-Archive -Path $onnxZip -DestinationPath $env:GITHUB_WORKSPACE -Force
+
+          $extracted = Get-ChildItem "$env:GITHUB_WORKSPACE" -Directory -Filter "onnxruntime-win-x64*" | Select-Object -First 1
+          Rename-Item $extracted.FullName $onnxDir -ErrorAction SilentlyContinue
+
+          echo "ONNXRUNTIME_ROOT=$onnxDir" >> $env:GITHUB_ENV
+          Write-Host "✓ ONNX Runtime at $onnxDir"
 
       # ─────────────────────────────────────────────────────────────────────
       # 5. CMAKE CONFIGURE
@@ -150,7 +169,6 @@ jobs:
           cmake -B build `
             -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE" `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
             -DVCPKG_TARGET_TRIPLET=x64-windows `
             -DAURORA_VERSION="$env:AURORA_VER" `
             -DAURORA_BUILD_DESKTOP=ON `
@@ -159,6 +177,7 @@ jobs:
             -DAURORA_USE_DX11=ON `
             -DAURORA_USE_DX12=ON `
             -DFFMPEG_PREFIX="$env:FFMPEG_PREFIX" `
+            -DONNXRUNTIME_ROOT="$env:ONNXRUNTIME_ROOT" `
             -DQt6_DIR="$env:Qt6_DIR" `
             -DVULKAN_SDK="$env:VULKAN_SDK" `
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON

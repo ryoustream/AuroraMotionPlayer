@@ -238,16 +238,16 @@ jobs:
           Copy-Item "installer\wix\aurora-ui.wxs" $wixStage -Force
 
           # Generate license.rtf
-          $licRtf = @"
-          {\rtf1\ansi\deff0{\fonttbl{\f0 Segoe UI;}}
-          \f0\fs20 Aurora Motion Player\par\par
-          Copyright (c) 2024 Aurora Project\par\par
-          Licensed under the MIT License.\par\par
-          Permission is hereby granted, free of charge, to any person obtaining a copy
-          of this software and associated documentation files (the "Software"), to deal
-          in the Software without restriction.\par}
-"@
-          $licRtf | Set-Content (Join-Path $wixStage "license.rtf") -Encoding UTF8
+          $licLines = @(
+            '{\rtf1\ansi\deff0{\fonttbl{\f0 Segoe UI;}}',
+            '\f0\fs20 Aurora Motion Player\par\par',
+            'Copyright (c) 2024 Aurora Project\par\par',
+            'Licensed under the MIT License.\par\par',
+            'Permission is hereby granted, free of charge, to any person obtaining a copy',
+            'of this software and associated documentation files (the "Software"), to deal',
+            'in the Software without restriction.\par}'
+          )
+          ($licLines -join "`r`n") | Set-Content (Join-Path $wixStage "license.rtf") -Encoding UTF8
 
           # Generate placeholder BMPs (BMP 1x1)
           $bmpBytes = [byte[]](
@@ -331,7 +331,7 @@ jobs:
       - name: Code sign installer artefacts
         if: >
           github.event.inputs.sign == 'true' &&
-          secrets.SIGN_THUMBPRINT != ''
+          env.SIGN_THUMBPRINT != ''
         shell: pwsh
         env:
           SIGN_THUMBPRINT: ${{ secrets.SIGN_THUMBPRINT }}

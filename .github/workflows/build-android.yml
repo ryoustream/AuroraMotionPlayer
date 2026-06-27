@@ -77,12 +77,15 @@ jobs:
         run: |
           sdkmanager \
             "ndk;$NDK_VERSION" \
+            "cmake;$CMAKE_VERSION" \
             "build-tools;$BUILD_TOOLS" \
             "platforms;android-$COMPILE_SDK" \
             --channel=0 2>&1 | grep -v "^\[=" | tail -20
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> $GITHUB_ENV
+          CMAKE_BIN_DIR="$ANDROID_HOME/cmake/$CMAKE_VERSION/bin"
+          echo "AURORA_CMAKE_DIR=$CMAKE_BIN_DIR" >> $GITHUB_ENV
           echo "✓ NDK   : $NDK_VERSION"
-          echo "✓ CMake : $CMAKE_VERSION"
+          echo "✓ CMake : $CMAKE_VERSION  (dir=$CMAKE_BIN_DIR)"
 
       # ─────────────────────────────────────────────────────────────────────
       # 3. CACHE LAYERS
@@ -194,13 +197,10 @@ jobs:
           find mobile/android/app/src/main/kotlin -name "*.kt" | sort
           echo "✓ Pre-build validation complete"
 
-          # Inject cmake.dir so AGP finds system cmake instead of SDK cmake
-          CMAKE_PATH="$(which cmake)"
-          CMAKE_DIR="$(dirname "$CMAKE_PATH")"
-          echo "cmake.dir=$CMAKE_DIR" >> mobile/android/local.properties
-          echo "sdk.dir=$ANDROID_HOME"    >> mobile/android/local.properties
-          echo "ndk.dir=$ANDROID_NDK_HOME" >> mobile/android/local.properties
-          echo "✓ local.properties written (cmake.dir=$CMAKE_DIR)"
+          # cmake.dir = directory containing the cmake binary (installed via sdkmanager)
+          echo "cmake.dir=$AURORA_CMAKE_DIR" >> mobile/android/local.properties
+          echo "sdk.dir=$ANDROID_HOME"       >> mobile/android/local.properties
+          echo "✓ local.properties written (cmake.dir=$AURORA_CMAKE_DIR)"
 
       - name: "⑥ Gradle · assemble ${{ env.BUILD_VARIANT }}"
         working-directory: mobile/android

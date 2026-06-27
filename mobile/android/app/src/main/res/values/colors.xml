@@ -42,4 +42,11 @@
     <color name="colorOnBackground">@color/aurora_on_surface</color>
     <color name="colorError">@color/aurora_error</color>
     <color name="colorOnError">#FFFFFF</color>
+
+    <!-- Short aliases used by some layouts -->
+    <color name="surface">@color/aurora_surface</color>
+    <color name="surface_variant">@color/aurora_surface_variant</color>
+    <color name="text_primary">@color/aurora_on_surface</color>
+    <color name="text_secondary">@color/aurora_on_surface_secondary</color>
 </resources>
+

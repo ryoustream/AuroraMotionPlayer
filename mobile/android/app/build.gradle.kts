@@ -52,7 +52,6 @@ android {
     externalNativeBuild {
         cmake {
             path    = file("src/main/jni/CMakeLists.txt")
-            version = "3.25.0"
         }
     }
 
@@ -89,6 +88,9 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("androidx.documentfile:documentfile:1.0.1")
+
+    // SplashScreen
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     // Material Design 3
     implementation("com.google.android.material:material:1.11.0")

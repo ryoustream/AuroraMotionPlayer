@@ -215,7 +215,7 @@ class SubtitleFragment : Fragment() {
                     tvStatus.text = "Error: ${result.message}"
                 }
                 SubtitleDownloader.SearchResult.NoResults -> {
-                    tvStatus.text = "No subtitles found for "$query""
+                    tvStatus.text = "No subtitles found for $query"
                 }
             }
             pbSearch.visibility = View.GONE

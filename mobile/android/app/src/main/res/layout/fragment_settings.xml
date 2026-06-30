@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/surface">
 
-    <!-- Toolbar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbarSettings"
         android:layout_width="match_parent"
@@ -16,48 +14,194 @@
         app:title="Settings"
         app:titleTextColor="@color/text_primary" />
 
-    <!-- Tab layout -->
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayoutSettings"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/surface_variant"
-        app:tabGravity="fill"
-        app:tabMode="scrollable"
-        app:tabTextColor="@color/text_secondary"
-        app:tabSelectedTextColor="@color/aurora_primary"
-        app:tabIndicatorColor="@color/aurora_primary">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Video" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="AI" />
+            <TextView style="?attr/textAppearanceTitleMedium" android:textColor="@color/text_primary"
+                android:text="Video" android:paddingBottom="8dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
 
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Audio" />
+            <TextView android:text="Decoder" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <Spinner android:id="@+id/spinDecoder"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
 
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Subtitles" />
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Hardware Acceleration" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchHWAccel"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
 
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Advanced" />
-    </com.google.android.material.tabs.TabLayout>
+            <TextView android:text="Renderer" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <Spinner android:id="@+id/spinRenderer"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
 
-    <!-- ViewPager2 content -->
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPagerSettings"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="HDR" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchHDR"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
 
-</LinearLayout>
+            <TextView android:text="Tone Mapping" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <Spinner android:id="@+id/spinToneMap"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <TextView style="?attr/textAppearanceTitleMedium" android:textColor="@color/text_primary"
+                android:text="AI" android:paddingTop="16dp" android:paddingBottom="8dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Frame Interpolation" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchInterpolation"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView android:text="Interpolation Model" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <Spinner android:id="@+id/spinInterpModel"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <TextView android:text="Target FPS" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <Spinner android:id="@+id/spinTargetFPS"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="AI Upscaling" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchUpscale"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView android:text="Upscaler" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <Spinner android:id="@+id/spinUpscaler"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <TextView android:text="Upscale Mode" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <Spinner android:id="@+id/spinUpscaleMode"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Auto-Select Model" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchAutoSelect"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView android:id="@+id/tvQualityLabel" android:text="Quality" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <SeekBar android:id="@+id/sbQuality"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <TextView style="?attr/textAppearanceTitleMedium" android:textColor="@color/text_primary"
+                android:text="Audio" android:paddingTop="16dp" android:paddingBottom="8dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Audio Passthrough" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchPassthrough"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView android:id="@+id/tvSyncLabel" android:text="A/V Sync Offset" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <SeekBar android:id="@+id/sbAudioSync"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Normalize Volume" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchNormalize"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView style="?attr/textAppearanceTitleMedium" android:textColor="@color/text_primary"
+                android:text="Subtitles" android:paddingTop="16dp" android:paddingBottom="8dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+
+            <TextView android:id="@+id/tvSubFontLabel" android:text="Font Size" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <SeekBar android:id="@+id/sbSubFontSize"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Bold" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchSubBold"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Outline" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchSubOutline"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView android:text="Preferred Language" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <Spinner android:id="@+id/spinSubLanguage"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <Button android:id="@+id/btnSubtitleDownload" android:text="Download Subtitles"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <TextView style="?attr/textAppearanceTitleMedium" android:textColor="@color/text_primary"
+                android:text="Advanced" android:paddingTop="16dp" android:paddingBottom="8dp"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="Debug Overlay" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchDebugOverlay"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView android:id="@+id/tvBufferLabel" android:text="Buffer Size" android:textColor="@color/text_secondary"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <SeekBar android:id="@+id/sbBufferSize"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <LinearLayout android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <TextView android:text="VSync" android:textColor="@color/text_secondary"
+                    android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" />
+                <Switch android:id="@+id/switchVSync"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <Button android:id="@+id/btnClearCache" android:text="Clear Cache"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" android:layout_marginBottom="24dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

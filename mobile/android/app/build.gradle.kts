@@ -52,6 +52,7 @@ android {
     externalNativeBuild {
         cmake {
             path    = file("src/main/jni/CMakeLists.txt")
+            version = "3.22.1"
         }
     }
 
@@ -94,6 +95,9 @@ dependencies {
 
     // Material Design 3
     implementation("com.google.android.material:material:1.11.0")
+
+    // Media (legacy MediaSession for notification)
+    implementation("androidx.media:media:1.7.0")
 
     // Media3 (ExoPlayer fallback)
     implementation("androidx.media3:media3-exoplayer:1.2.1")

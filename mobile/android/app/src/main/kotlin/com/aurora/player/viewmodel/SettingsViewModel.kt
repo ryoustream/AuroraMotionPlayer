@@ -120,25 +120,4 @@ class SettingsViewModel : ViewModel() {
         runCatching { ctx.externalCacheDir?.deleteRecursively() }
     }
 
-    private val _subtitleDownloadRequest = MutableLiveData<Unit>()
-    val subtitleDownloadRequest: LiveData<Unit> = _subtitleDownloadRequest
-    fun requestSubtitleDownload() { _subtitleDownloadRequest.value = Unit }
-
-    // ── Advanced ──────────────────────────────────────────────────────────────
-    private val _debugOverlay    = MutableLiveData(false)
-    val debugOverlay: LiveData<Boolean> = _debugOverlay
-    fun setDebugOverlay(on: Boolean) { _debugOverlay.value = on }
-
-    private val _bufferSizeIndex = MutableLiveData(2)
-    val bufferSizeIndex: LiveData<Int> = _bufferSizeIndex
-    fun setBufferSize(idx: Int) { _bufferSizeIndex.value = idx }
-
-    private val _vsyncEnabled    = MutableLiveData(true)
-    val vsyncEnabled: LiveData<Boolean> = _vsyncEnabled
-    fun setVSync(on: Boolean) { _vsyncEnabled.value = on }
-
-    fun clearCache(ctx: Context) {
-        ctx.cacheDir.deleteRecursively()
-        ctx.externalCacheDir?.deleteRecursively()
-    }
 }

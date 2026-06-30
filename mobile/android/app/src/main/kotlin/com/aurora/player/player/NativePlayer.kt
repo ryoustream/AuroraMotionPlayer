@@ -67,7 +67,14 @@ class NativePlayer {
     private external fun nativeLoadSubtitle(handle: Long, path: String)
     private external fun nativeGetBenchmarkStats(handle: Long): String
 
-    companion object {
+    private external fun nativeSetSpeed(handle: Long, speed: Float)
+    private external fun nativeSetSubtitleFontSize(handle: Long, sp: Int)
+    private external fun nativeSetSubtitleBold(handle: Long, bold: Boolean)
+    private external fun nativeSetSubtitleOutline(handle: Long, on: Boolean)
+    private external fun nativeSetSubtitleDelay(handle: Long, ms: Int)
+    private external fun nativeSetSubtitleOffset(handle: Long, pct: Int)
+
+        companion object {
         init { System.loadLibrary("aurora_jni") }
     }
 }

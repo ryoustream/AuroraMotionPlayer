@@ -197,10 +197,9 @@ jobs:
           find mobile/android/app/src/main/kotlin -name "*.kt" | sort
           echo "✓ Pre-build validation complete"
 
-          # cmake.dir = directory containing the cmake binary (installed via sdkmanager)
-          echo "cmake.dir=$AURORA_CMAKE_DIR" >> mobile/android/local.properties
-          echo "sdk.dir=$ANDROID_HOME"       >> mobile/android/local.properties
-          echo "✓ local.properties written (cmake.dir=$AURORA_CMAKE_DIR)"
+          # Write sdk.dir only - cmake found by AGP via version= in build.gradle.kts
+          echo "sdk.dir=$ANDROID_HOME" >> mobile/android/local.properties
+          echo "✓ local.properties written (sdk.dir=$ANDROID_HOME)"
 
       - name: "⑥ Gradle · assemble ${{ env.BUILD_VARIANT }}"
         working-directory: mobile/android

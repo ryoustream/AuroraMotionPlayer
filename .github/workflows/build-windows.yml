@@ -89,12 +89,12 @@ jobs:
           arch: x64
 
       - name: "③ Install Qt ${{ env.QT_VERSION }}"
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v4
         with:
           version:  ${{ env.QT_VERSION }}
           host:     windows
           target:   desktop
-          arch:     win64_msvc2019_64
+          arch:     win64_msvc2022_64
           modules:  "qtmultimedia qtnetwork qtsvg"
           cache:    true
           cache-key-prefix: qt-win64-${{ env.QT_VERSION }}

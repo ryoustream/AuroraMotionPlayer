@@ -120,4 +120,21 @@ class SettingsViewModel : ViewModel() {
         runCatching { ctx.externalCacheDir?.deleteRecursively() }
     }
 
+    // ── Advanced tab ─────────────────────────────────────────────────────────
+
+    // Debug overlay (FPS / decode stats) shown over the video surface
+    private val _debugOverlay = MutableLiveData(false)
+    val debugOverlay: LiveData<Boolean> = _debugOverlay
+    fun setDebugOverlay(on: Boolean) { _debugOverlay.value = on }
+
+    // Demuxer/decoder buffer size selection: index into {1,4,8,16,32}MB
+    private val _bufferSizeIndex = MutableLiveData(2)
+    val bufferSizeIndex: LiveData<Int> = _bufferSizeIndex
+    fun setBufferSize(idx: Int) { _bufferSizeIndex.value = idx }
+
+    // Render loop VSync
+    private val _vsyncEnabled = MutableLiveData(true)
+    val vsyncEnabled: LiveData<Boolean> = _vsyncEnabled
+    fun setVSync(on: Boolean) { _vsyncEnabled.value = on }
+
 }

@@ -1,0 +1,17 @@
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/MainActivity.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/ui/playlist/PlaylistFragment.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/benchmark/BenchmarkFragment.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/viewmodel/PlayerViewModel.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/ui/subtitle/SubtitleFragment.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/player/NativePlayer.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/benchmark/SystemMonitor.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/ui/settings/SettingsFragment.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/ui/PlayerFragment.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/subtitle/SubtitleDownloader.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/benchmark/BenchmarkOverlayView.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/util/UriUtils.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/benchmark/BenchmarkViewModel.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/service/PlaybackService.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/ui/pip/PiPManager.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/viewmodel/SettingsViewModel.kt
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/kotlin/com/aurora/player/viewmodel/PlaylistViewModel.kt

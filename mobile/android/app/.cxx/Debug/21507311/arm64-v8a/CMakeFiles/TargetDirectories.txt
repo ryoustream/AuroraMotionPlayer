@@ -1,0 +1,3 @@
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/.cxx/Debug/21507311/arm64-v8a/CMakeFiles/aurora_jni.dir
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/.cxx/Debug/21507311/arm64-v8a/CMakeFiles/edit_cache.dir
+/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/.cxx/Debug/21507311/arm64-v8a/CMakeFiles/rebuild_cache.dir

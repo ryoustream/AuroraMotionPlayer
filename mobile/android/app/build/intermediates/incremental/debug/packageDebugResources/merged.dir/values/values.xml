@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="aurora_deep_space">#0A0E1A</color>
+    <color name="aurora_error">#EF4444</color>
+    <color name="aurora_on_surface">#F9FAFB</color>
+    <color name="aurora_on_surface_disabled">#4B5563</color>
+    <color name="aurora_on_surface_secondary">#9CA3AF</color>
+    <color name="aurora_outline">#374151</color>
+    <color name="aurora_primary">#4FACDE</color>
+    <color name="aurora_primary_variant">#2D8BB5</color>
+    <color name="aurora_secondary">#7EDCA8</color>
+    <color name="aurora_success">#10B981</color>
+    <color name="aurora_surface">#111827</color>
+    <color name="aurora_surface_variant">#1F2937</color>
+    <color name="aurora_tertiary">#A855F7</color>
+    <color name="aurora_void">#060910</color>
+    <color name="aurora_warning">#F59E0B</color>
+    <color name="colorBackground">@color/aurora_deep_space</color>
+    <color name="colorError">@color/aurora_error</color>
+    <color name="colorOnBackground">@color/aurora_on_surface</color>
+    <color name="colorOnError">#FFFFFF</color>
+    <color name="colorOnPrimary">@color/aurora_void</color>
+    <color name="colorOnSecondary">@color/aurora_void</color>
+    <color name="colorOnSurface">@color/aurora_on_surface</color>
+    <color name="colorPrimary">@color/aurora_primary</color>
+    <color name="colorPrimaryVariant">@color/aurora_primary_variant</color>
+    <color name="colorSecondary">@color/aurora_secondary</color>
+    <color name="colorSurface">@color/aurora_surface</color>
+    <color name="player_control_tint">#FFFFFFFF</color>
+    <color name="player_overlay_bg">#B3000000</color>
+    <color name="player_progress_buffered">#80FFFFFF</color>
+    <color name="player_progress_played">#4FACDE</color>
+    <color name="player_progress_track">#4DFFFFFF</color>
+    <color name="surface">@color/aurora_surface</color>
+    <color name="surface_variant">@color/aurora_surface_variant</color>
+    <color name="text_primary">@color/aurora_on_surface</color>
+    <color name="text_secondary">@color/aurora_on_surface_secondary</color>
+    <dimen name="card_corner_radius">12dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="player_button_size">48dp</dimen>
+    <dimen name="player_control_height">56dp</dimen>
+    <dimen name="player_icon_size">24dp</dimen>
+    <dimen name="player_seek_height">4dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="stats_overlay_width">120dp</dimen>
+    <dimen name="text_body">14sp</dimen>
+    <dimen name="text_heading">20sp</dimen>
+    <dimen name="text_sm">12sp</dimen>
+    <dimen name="text_title">16sp</dimen>
+    <dimen name="text_xs">11sp</dimen>
+    <string name="ab_repeat">AB Repeat</string>
+    <string name="about">About</string>
+    <string name="ai_frame_interpolation">Frame Interpolation</string>
+    <string name="ai_interpolation_model">Interpolation model</string>
+    <string name="ai_interpolation_quality">Quality preset</string>
+    <string name="ai_target_fps">Target FPS</string>
+    <string name="ai_toggle">Toggle AI interpolation</string>
+    <string name="ai_upscale_factor">Scale factor</string>
+    <string name="ai_upscale_model">Upscale model</string>
+    <string name="ai_upscaling">AI Upscaling</string>
+    <string name="app_name">Aurora Player</string>
+    <string name="app_name_short">Aurora</string>
+    <string name="audio_track">Audio track</string>
+    <string name="buffering">Buffering…</string>
+    <string name="cancel">Cancel</string>
+    <string name="chapter_next">Next chapter</string>
+    <string name="chapter_prev">Previous chapter</string>
+    <string name="close">Close</string>
+    <string name="error_decoder">Decoder error</string>
+    <string name="error_network">Network error</string>
+    <string name="error_open_file">Cannot open file</string>
+    <string name="error_unsupported_format">Unsupported format</string>
+    <string name="exit_fullscreen">Exit fullscreen</string>
+    <string name="fullscreen">Fullscreen</string>
+    <string name="loading">Loading…</string>
+    <string name="no_media">No media selected.\nTap + to open a file.</string>
+    <string name="ok">OK</string>
+    <string name="open_file">Open file</string>
+    <string name="open_network">Open network stream</string>
+    <string name="pause">Pause</string>
+    <string name="permission_deny">Deny</string>
+    <string name="permission_grant">Grant</string>
+    <string name="permission_storage_msg">Aurora Player needs storage access to open video files.</string>
+    <string name="permission_storage_title">Storage permission needed</string>
+    <string name="picture_in_picture">Picture in Picture</string>
+    <string name="pip_enter">Enter Picture-in-Picture</string>
+    <string name="play">Play</string>
+    <string name="playback_speed">Playback speed</string>
+    <string name="playlist">Playlist</string>
+    <string name="seek_backward">Seek backward 10s</string>
+    <string name="seek_forward">Seek forward 10s</string>
+    <string name="settings">Settings</string>
+    <string name="settings_ai">AI Processing</string>
+    <string name="settings_audio">Audio</string>
+    <string name="settings_playback">Playback</string>
+    <string name="settings_subtitle">Subtitle</string>
+    <string name="settings_video">Video</string>
+    <string name="speed_badge">Playback speed</string>
+    <string name="stop">Stop</string>
+    <string name="subtitle_download">Download subtitle</string>
+    <string name="subtitle_load_external">Load subtitle file</string>
+    <string name="subtitle_track">Subtitle</string>
+    <string name="unknown">Unknown</string>
+    <string name="version">Version %1$s</string>
+    <style name="Theme.AuroraPlayer" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/aurora_primary</item>
+        <item name="colorPrimaryVariant">@color/aurora_primary_variant</item>
+        <item name="colorOnPrimary">@color/aurora_void</item>
+        <item name="colorSecondary">@color/aurora_secondary</item>
+        <item name="colorOnSecondary">@color/aurora_void</item>
+        <item name="colorSurface">@color/aurora_surface</item>
+        <item name="colorOnSurface">@color/aurora_on_surface</item>
+        <item name="android:colorBackground">@color/aurora_deep_space</item>
+        <item name="android:windowBackground">@color/aurora_deep_space</item>
+        <item name="android:statusBarColor">@color/aurora_void</item>
+        <item name="android:navigationBarColor">@color/aurora_void</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:textColorPrimary">@color/aurora_on_surface</item>
+        <item name="android:textColorSecondary">@color/aurora_on_surface_secondary</item>
+    </style>
+    <style name="Theme.AuroraPlayer.Player" parent="Theme.AuroraPlayer">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:statusBarColor">#00000000</item>
+        <item name="android:navigationBarColor">#00000000</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+    <style name="Theme.AuroraPlayer.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/aurora_void</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_aurora_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.AuroraPlayer</item>
+    </style>
+    <declare-styleable name="AuroraPlayerView">
+        <attr format="boolean" name="showControls"/>
+        <attr format="integer" name="autoHideDelay"/>
+        <attr format="enum" name="aspectRatio">
+            <enum name="fit" value="0"/>
+            <enum name="fill" value="1"/>
+            <enum name="original" value="2"/>
+            <enum name="stretch" value="3"/>
+        </attr>
+    </declare-styleable>
+</resources>

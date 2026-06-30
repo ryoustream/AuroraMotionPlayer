@@ -1,0 +1,24 @@
+                        -H/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/jni
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_SYSTEM_VERSION=30
+-DANDROID_ABI=arm64-v8a
+-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a
+-DANDROID_NDK=/usr/local/lib/android/sdk/ndk/26.1.10909125
+-DCMAKE_ANDROID_NDK=/usr/local/lib/android/sdk/ndk/26.1.10909125
+-DCMAKE_TOOLCHAIN_FILE=/usr/local/lib/android/sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=/usr/local/lib/android/sdk/cmake/3.31.5/bin/ninja
+-DCMAKE_CXX_FLAGS=-std=c++20 -O2 -march=armv8-a+simd
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/build/intermediates/cxx/Debug/21507311/obj/arm64-v8a
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/build/intermediates/cxx/Debug/21507311/obj/arm64-v8a
+-DCMAKE_BUILD_TYPE=Debug
+-DCMAKE_FIND_ROOT_PATH=/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/.cxx/Debug/21507311/prefab/arm64-v8a/prefab
+-B/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/.cxx/Debug/21507311/arm64-v8a
+-GNinja
+-DANDROID=ON
+-DANDROID_PLATFORM=android-30
+-DANDROID_STL=c++_shared
+-DAURORA_USE_VULKAN=ON
+-DAURORA_NCNN=ON
+                        Build command args: []
+                        Version: 2

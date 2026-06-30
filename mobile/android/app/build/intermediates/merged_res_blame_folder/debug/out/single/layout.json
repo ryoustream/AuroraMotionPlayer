@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "com.aurora.player.app-mergeDebugResources-47:/layout/activity_main.xml",
+        "source": "com.aurora.player.app-main-50:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.aurora.player.app-mergeDebugResources-47:/layout/fragment_settings.xml",
+        "source": "com.aurora.player.app-main-50:/layout/fragment_settings.xml"
+    },
+    {
+        "merged": "com.aurora.player.app-mergeDebugResources-47:/layout/fragment_playlist.xml",
+        "source": "com.aurora.player.app-main-50:/layout/fragment_playlist.xml"
+    },
+    {
+        "merged": "com.aurora.player.app-mergeDebugResources-47:/layout/fragment_player.xml",
+        "source": "com.aurora.player.app-main-50:/layout/fragment_player.xml"
+    },
+    {
+        "merged": "com.aurora.player.app-mergeDebugResources-47:/layout/item_playlist.xml",
+        "source": "com.aurora.player.app-main-50:/layout/item_playlist.xml"
+    }
+]

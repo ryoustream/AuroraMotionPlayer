@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/.cxx/Debug/21507311/arm64-v8a",
+  "command": "/usr/local/lib/android/sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android30 --sysroot=/usr/local/lib/android/sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Daurora_jni_EXPORTS -I/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/jni/../../../../core -I/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/jni/../../../.. -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++20 -O2 -march=armv8-a+simd -fno-limit-debug-info  -std=c++20 -fPIC -O2 -fvisibility=hidden -fPIC -o CMakeFiles/aurora_jni.dir/AuroraJNI.cpp.o -c /home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/jni/AuroraJNI.cpp",
+  "file": "/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/jni/AuroraJNI.cpp",
+  "output": "CMakeFiles/aurora_jni.dir/AuroraJNI.cpp.o"
+},
+{
+  "directory": "/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/.cxx/Debug/21507311/arm64-v8a",
+  "command": "/usr/local/lib/android/sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ --target=aarch64-none-linux-android30 --sysroot=/usr/local/lib/android/sdk/ndk/26.1.10909125/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Daurora_jni_EXPORTS -I/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/jni/../../../../core -I/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/jni/../../../.. -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++20 -O2 -march=armv8-a+simd -fno-limit-debug-info  -std=c++20 -fPIC -O2 -fvisibility=hidden -fPIC -o CMakeFiles/aurora_jni.dir/AuroraPlayerBridge.cpp.o -c /home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/jni/AuroraPlayerBridge.cpp",
+  "file": "/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/jni/AuroraPlayerBridge.cpp",
+  "output": "CMakeFiles/aurora_jni.dir/AuroraPlayerBridge.cpp.o"
+}
+]

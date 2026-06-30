@@ -1,0 +1,398 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.aurora.player"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="30"
+9        android:targetSdkVersion="34" />
+10
+11    <!-- Permissions -->
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:6:5-67
+12-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:6:22-64
+13    <uses-permission
+13-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:7:5-8:38
+14        android:name="android.permission.READ_EXTERNAL_STORAGE"
+14-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:7:22-77
+15        android:maxSdkVersion="32" />
+15-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:8:9-35
+16    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+16-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:9:5-75
+16-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:9:22-72
+17    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+17-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:10:5-75
+17-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:10:22-72
+18    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+18-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:11:5-77
+18-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:11:22-74
+19    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+19-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:12:5-92
+19-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:12:22-89
+20    <uses-permission android:name="android.permission.WAKE_LOCK" />
+20-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:13:5-68
+20-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:13:22-65
+21    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+21-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:14:5-81
+21-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:14:22-78
+22    <uses-permission android:name="android.permission.MANAGE_MEDIA" />
+22-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:15:5-71
+22-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:15:22-68
+23    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+23-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:16:5-77
+23-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:16:22-74
+24    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+24-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:17:5-74
+24-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:17:22-71
+25
+26    <!-- Declare features but mark optional -->
+27    <uses-feature
+27-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:20:5-111
+28        android:name="android.hardware.vulkan.level"
+28-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:20:19-63
+29        android:required="false"
+29-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:20:64-88
+30        android:version="0" />
+30-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:20:89-108
+31    <uses-feature
+31-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:21:5-93
+32        android:name="android.hardware.vulkan.compute"
+32-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:21:19-65
+33        android:required="false" />
+33-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:21:66-90
+34
+35    <!-- Package visibility queries required for Android 11+ (API 30) -->
+36    <!-- Allows Aurora to discover media apps, subtitle apps, browsers -->
+37    <queries>
+37-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:102:5-127:15
+38
+39        <!-- Any app that can play audio/video -->
+40        <intent>
+40-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:104:9-107:18
+41            <action android:name="android.intent.action.VIEW" />
+41-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:17-69
+41-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:25-66
+42
+43            <data android:mimeType="video/*" />
+43-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+43-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+44        </intent>
+45        <intent>
+45-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:108:9-111:18
+46            <action android:name="android.intent.action.VIEW" />
+46-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:17-69
+46-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:25-66
+47
+48            <data android:mimeType="audio/*" />
+48-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+48-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+49        </intent>
+50        <!-- File managers -->
+51        <intent>
+51-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:113:9-116:18
+52            <action android:name="android.intent.action.GET_CONTENT" />
+52-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:114:13-72
+52-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:114:21-69
+53
+54            <data android:mimeType="*/*" />
+54-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+54-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+55        </intent>
+56        <!-- Browsers (for subtitle download) -->
+57        <intent>
+57-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:118:9-121:18
+58            <action android:name="android.intent.action.VIEW" />
+58-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:17-69
+58-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:25-66
+59
+60            <data android:scheme="https" />
+60-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+60-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+61        </intent>
+62        <!-- Share targets -->
+63        <intent>
+63-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:123:9-126:18
+64            <action android:name="android.intent.action.SEND" />
+64-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:124:13-65
+64-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:124:21-62
+65
+66            <data android:mimeType="video/*" />
+66-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+66-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+67        </intent>
+68    </queries>
+69
+70    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+70-->[androidx.media3:media3-exoplayer:1.2.1] /home/runner/.gradle/caches/transforms-3/92761a14691bddd91e454dd18bc70935/transformed/media3-exoplayer-1.2.1/AndroidManifest.xml:22:5-79
+70-->[androidx.media3:media3-exoplayer:1.2.1] /home/runner/.gradle/caches/transforms-3/92761a14691bddd91e454dd18bc70935/transformed/media3-exoplayer-1.2.1/AndroidManifest.xml:22:22-76
+71
+72    <permission
+72-->[androidx.core:core:1.12.0] /home/runner/.gradle/caches/transforms-3/01be542a8a7642ecba403b94caa2bdf6/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+73        android:name="com.aurora.player.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+73-->[androidx.core:core:1.12.0] /home/runner/.gradle/caches/transforms-3/01be542a8a7642ecba403b94caa2bdf6/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+74        android:protectionLevel="signature" />
+74-->[androidx.core:core:1.12.0] /home/runner/.gradle/caches/transforms-3/01be542a8a7642ecba403b94caa2bdf6/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+75
+76    <uses-permission android:name="com.aurora.player.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+76-->[androidx.core:core:1.12.0] /home/runner/.gradle/caches/transforms-3/01be542a8a7642ecba403b94caa2bdf6/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
+76-->[androidx.core:core:1.12.0] /home/runner/.gradle/caches/transforms-3/01be542a8a7642ecba403b94caa2bdf6/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+77
+78    <application
+78-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:23:5-97:19
+79        android:allowBackup="true"
+79-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:24:9-35
+80        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+80-->[androidx.core:core:1.12.0] /home/runner/.gradle/caches/transforms-3/01be542a8a7642ecba403b94caa2bdf6/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
+81        android:dataExtractionRules="@xml/data_extraction_rules"
+81-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:25:9-65
+82        android:debuggable="true"
+83        android:extractNativeLibs="false"
+84        android:fullBackupContent="@xml/backup_rules"
+84-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:26:9-54
+85        android:hardwareAccelerated="true"
+85-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:27:9-43
+86        android:icon="@mipmap/ic_launcher"
+86-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:28:9-43
+87        android:label="@string/app_name"
+87-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:29:9-41
+88        android:largeHeap="true"
+88-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:30:9-33
+89        android:networkSecurityConfig="@xml/network_security_config"
+89-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:31:9-69
+90        android:requestLegacyExternalStorage="false"
+90-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:32:9-53
+91        android:roundIcon="@mipmap/ic_launcher_round"
+91-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:33:9-54
+92        android:supportsRtl="true"
+92-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:34:9-35
+93        android:theme="@style/Theme.AuroraPlayer" >
+93-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:35:9-50
+94
+95        <!-- Main Activity -->
+96        <activity
+96-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:39:9-85:20
+97            android:name="com.aurora.player.MainActivity"
+97-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:40:13-41
+98            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|navigation"
+98-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:41:13-98
+99            android:exported="true"
+99-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:42:13-36
+100            android:launchMode="singleTask"
+100-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:43:13-44
+101            android:resizeableActivity="true"
+101-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:44:13-46
+102            android:screenOrientation="sensor"
+102-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:45:13-47
+103            android:supportsPictureInPicture="true"
+103-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:46:13-52
+104            android:theme="@style/Theme.AuroraPlayer.Player" >
+104-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:47:13-61
+105            <intent-filter android:priority="1" >
+105-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:49:13-52:29
+105-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:49:28-48
+106                <action android:name="android.intent.action.MAIN" />
+106-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:50:17-69
+106-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:50:25-66
+107
+108                <category android:name="android.intent.category.LAUNCHER" />
+108-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:51:17-77
+108-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:51:27-74
+109            </intent-filter>
+110
+111            <!-- Video file associations -->
+112            <intent-filter android:priority="1" >
+112-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:55:13-62:29
+112-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:55:28-48
+113                <action android:name="android.intent.action.VIEW" />
+113-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:17-69
+113-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:25-66
+114
+115                <category android:name="android.intent.category.DEFAULT" />
+115-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:57:17-76
+115-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:57:27-73
+116                <category android:name="android.intent.category.BROWSABLE" />
+116-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:58:17-78
+116-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:58:27-75
+117
+118                <data android:scheme="file" />
+118-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+118-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+119                <data android:scheme="content" />
+119-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+119-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+120                <data android:mimeType="video/*" />
+120-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+120-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+121            </intent-filter>
+122
+123            <!-- Specific video MIME types -->
+124            <intent-filter android:priority="1" >
+124-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:65:13-74:29
+124-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:65:28-48
+125                <action android:name="android.intent.action.VIEW" />
+125-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:17-69
+125-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:25-66
+126
+127                <category android:name="android.intent.category.DEFAULT" />
+127-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:57:17-76
+127-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:57:27-73
+128                <category android:name="android.intent.category.BROWSABLE" />
+128-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:58:17-78
+128-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:58:27-75
+129
+130                <data
+130-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+131                    android:mimeType="video/mp4"
+131-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+132                    android:scheme="file" />
+132-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+133                <data
+133-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+134                    android:mimeType="video/x-matroska"
+134-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+135                    android:scheme="file" />
+135-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+136                <data
+136-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+137                    android:mimeType="video/webm"
+137-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+138                    android:scheme="file" />
+138-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+139                <data
+139-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+140                    android:mimeType="video/avi"
+140-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+141                    android:scheme="file" />
+141-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+142                <data
+142-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+143                    android:mimeType="video/quicktime"
+143-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:61:23-49
+144                    android:scheme="file" />
+144-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+145            </intent-filter>
+146
+147            <!-- Network streams -->
+148            <intent-filter android:priority="1" >
+148-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:77:13-84:29
+148-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:77:28-48
+149                <action android:name="android.intent.action.VIEW" />
+149-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:17-69
+149-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:56:25-66
+150
+151                <category android:name="android.intent.category.DEFAULT" />
+151-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:57:17-76
+151-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:57:27-73
+152                <category android:name="android.intent.category.BROWSABLE" />
+152-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:58:17-78
+152-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:58:27-75
+153
+154                <data android:scheme="rtsp" />
+154-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+154-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+155                <data android:scheme="rtmp" />
+155-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+155-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+156                <data android:scheme="rtmps" />
+156-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:17-47
+156-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:59:23-44
+157            </intent-filter>
+158        </activity>
+159
+160        <!-- Subtitle file intent filter (external apps) -->
+161        <!-- SubtitleFragment and UriUtils are registered S7 modules -->
+162
+163
+164        <!-- Background playback service -->
+165        <service
+165-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:91:9-95:19
+166            android:name="com.aurora.player.service.PlaybackService"
+166-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:92:13-52
+167            android:exported="false"
+167-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:93:13-37
+168            android:foregroundServiceType="mediaPlayback" >
+168-->/home/runner/work/AuroraMotionPlayer/AuroraMotionPlayer/mobile/android/app/src/main/AndroidManifest.xml:94:13-58
+169        </service>
+170
+171        <provider
+171-->[androidx.emoji2:emoji2:1.2.0] /home/runner/.gradle/caches/transforms-3/2497a04ce439ba5192d483e53a542533/transformed/emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+172            android:name="androidx.startup.InitializationProvider"
+172-->[androidx.emoji2:emoji2:1.2.0] /home/runner/.gradle/caches/transforms-3/2497a04ce439ba5192d483e53a542533/transformed/emoji2-1.2.0/AndroidManifest.xml:25:13-67
+173            android:authorities="com.aurora.player.androidx-startup"
+173-->[androidx.emoji2:emoji2:1.2.0] /home/runner/.gradle/caches/transforms-3/2497a04ce439ba5192d483e53a542533/transformed/emoji2-1.2.0/AndroidManifest.xml:26:13-68
+174            android:exported="false" >
+174-->[androidx.emoji2:emoji2:1.2.0] /home/runner/.gradle/caches/transforms-3/2497a04ce439ba5192d483e53a542533/transformed/emoji2-1.2.0/AndroidManifest.xml:27:13-37
+175            <meta-data
+175-->[androidx.emoji2:emoji2:1.2.0] /home/runner/.gradle/caches/transforms-3/2497a04ce439ba5192d483e53a542533/transformed/emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+176                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+176-->[androidx.emoji2:emoji2:1.2.0] /home/runner/.gradle/caches/transforms-3/2497a04ce439ba5192d483e53a542533/transformed/emoji2-1.2.0/AndroidManifest.xml:30:17-75
+177                android:value="androidx.startup" />
+177-->[androidx.emoji2:emoji2:1.2.0] /home/runner/.gradle/caches/transforms-3/2497a04ce439ba5192d483e53a542533/transformed/emoji2-1.2.0/AndroidManifest.xml:31:17-49
+178            <meta-data
+178-->[androidx.lifecycle:lifecycle-process:2.7.0] /home/runner/.gradle/caches/transforms-3/6cd941b5728d35bc713ca3d34665a608/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:29:13-31:52
+179                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+179-->[androidx.lifecycle:lifecycle-process:2.7.0] /home/runner/.gradle/caches/transforms-3/6cd941b5728d35bc713ca3d34665a608/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:30:17-78
+180                android:value="androidx.startup" />
+180-->[androidx.lifecycle:lifecycle-process:2.7.0] /home/runner/.gradle/caches/transforms-3/6cd941b5728d35bc713ca3d34665a608/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:31:17-49
+181            <meta-data
+181-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:29:13-31:52
+182                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+182-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:30:17-85
+183                android:value="androidx.startup" />
+183-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:31:17-49
+184        </provider>
+185
+186        <uses-library
+186-->[androidx.window:window:1.0.0] /home/runner/.gradle/caches/transforms-3/3a89d278939b9a8444ab24b60207adcc/transformed/window-1.0.0/AndroidManifest.xml:25:9-27:40
+187            android:name="androidx.window.extensions"
+187-->[androidx.window:window:1.0.0] /home/runner/.gradle/caches/transforms-3/3a89d278939b9a8444ab24b60207adcc/transformed/window-1.0.0/AndroidManifest.xml:26:13-54
+188            android:required="false" />
+188-->[androidx.window:window:1.0.0] /home/runner/.gradle/caches/transforms-3/3a89d278939b9a8444ab24b60207adcc/transformed/window-1.0.0/AndroidManifest.xml:27:13-37
+189        <uses-library
+189-->[androidx.window:window:1.0.0] /home/runner/.gradle/caches/transforms-3/3a89d278939b9a8444ab24b60207adcc/transformed/window-1.0.0/AndroidManifest.xml:28:9-30:40
+190            android:name="androidx.window.sidecar"
+190-->[androidx.window:window:1.0.0] /home/runner/.gradle/caches/transforms-3/3a89d278939b9a8444ab24b60207adcc/transformed/window-1.0.0/AndroidManifest.xml:29:13-51
+191            android:required="false" />
+191-->[androidx.window:window:1.0.0] /home/runner/.gradle/caches/transforms-3/3a89d278939b9a8444ab24b60207adcc/transformed/window-1.0.0/AndroidManifest.xml:30:13-37
+192
+193        <receiver
+193-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:34:9-52:20
+194            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+194-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:35:13-76
+195            android:directBootAware="false"
+195-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:36:13-44
+196            android:enabled="true"
+196-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:37:13-35
+197            android:exported="true"
+197-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:38:13-36
+198            android:permission="android.permission.DUMP" >
+198-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:39:13-57
+199            <intent-filter>
+199-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:40:13-42:29
+200                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+200-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:17-91
+200-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:25-88
+201            </intent-filter>
+202            <intent-filter>
+202-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:43:13-45:29
+203                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+203-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:17-85
+203-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:25-82
+204            </intent-filter>
+205            <intent-filter>
+205-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:46:13-48:29
+206                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+206-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:17-88
+206-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:25-85
+207            </intent-filter>
+208            <intent-filter>
+208-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:49:13-51:29
+209                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+209-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:17-95
+209-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/runner/.gradle/caches/transforms-3/5f7ce29a25973535d221a2c1da52466d/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:25-92
+210            </intent-filter>
+211        </receiver>
+212    </application>
+213
+214</manifest>

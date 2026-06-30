@@ -42,6 +42,8 @@ jobs:
     name: "Android APK · ${{ inputs.build_variant || github.event.inputs.build_variant || 'debug' }}"
     runs-on: ubuntu-22.04
     timeout-minutes: 60
+    permissions:
+      contents: write
 
     steps:
       # ─────────────────────────────────────────────────────────────────────
@@ -215,6 +217,24 @@ jobs:
             --warning-mode all \
             -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError" \
             2>&1 | tee ../../build-android.log
+
+      - name: "⑥b DIAG — push build output tree + log to ci-debug branch"
+        if: always()
+        run: |
+          mkdir -p /tmp/diag
+          find mobile/android/app/build -type f > /tmp/diag/filelist.txt 2>&1 || true
+          tail -c 200000 build-android.log > /tmp/diag/build-android.log 2>&1 || true
+          git config user.email "ci@aurora.local"
+          git config user.name "Aurora CI Diag"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git fetch origin ci-debug-logs 2>/dev/null || true
+          git checkout -B ci-debug-logs
+          git rm -rf --ignore-unmatch . > /dev/null 2>&1 || true
+          cp /tmp/diag/filelist.txt ./filelist.txt
+          cp /tmp/diag/build-android.log ./build-android.log
+          git add -A
+          git commit -m "diag: ${{ github.sha }}" --allow-empty
+          git push origin ci-debug-logs --force
 
       # ─────────────────────────────────────────────────────────────────────
       # 7. LINT

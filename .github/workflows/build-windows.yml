@@ -93,13 +93,27 @@ jobs:
         run: |
           pip install aqtinstall --quiet
           $QtDir = "C:\Qt"
-          aqt install-qt windows desktop ${{ env.QT_VERSION }} win64_msvc2019_64 `
+
+          Write-Host "Installing Qt ${{ env.QT_VERSION }}..."
+          $Result = aqt install-qt windows desktop ${{ env.QT_VERSION }} win64_msvc2019_64 `
             --outputdir $QtDir `
-            --modules qtmultimedia qtnetwork qtsvg
+            --modules qtmultimedia qtnetwork qtsvg 2>&1
+          Write-Host $Result
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::aqt install-qt failed (exit $LASTEXITCODE). Output: $Result"
+            # Retry once with verbose flag
+            aqt install-qt windows desktop ${{ env.QT_VERSION }} win64_msvc2019_64 `
+              --outputdir $QtDir `
+              --modules qtmultimedia qtnetwork qtsvg `
+              -v 2>&1
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          }
+
           $QtBin = "$QtDir\${{ env.QT_VERSION }}\msvc2019_64"
           echo "Qt6_DIR=$QtBin\lib\cmake\Qt6" >> $env:GITHUB_ENV
           echo "$QtBin\bin" >> $env:GITHUB_PATH
-          echo "✓ Qt ${{ env.QT_VERSION }} installed at $QtBin"
+          Write-Host "✓ Qt ${{ env.QT_VERSION }} installed at $QtBin"
 
       - name: "③ Bootstrap vcpkg"
         run: |

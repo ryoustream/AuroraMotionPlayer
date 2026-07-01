@@ -117,7 +117,13 @@ bool FFmpegDecoder::open(const std::string& url) {
             as.codecName  = avcodec_get_name(par->codec_id);
             as.sampleRate = par->sample_rate;
             as.bitrate    = par->bit_rate;
+            // ch_layout struct introduced in FFmpeg 5.1 (libavutil 57.28)
+            // Older FFmpeg (ubuntu-22.04 ships 4.x/5.0) uses channels field
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
             as.channels   = par->ch_layout.nb_channels;
+#else
+            as.channels   = par->channels;
+#endif
 
             auto* lang = av_dict_get(st->metadata, "language", nullptr, 0);
             if (lang) as.language = lang->value;

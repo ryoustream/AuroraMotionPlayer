@@ -2,7 +2,7 @@
 # ║  Aurora Motion Player — Android JNI CMakeLists                  ║
 # ║  Session 13 Fix: corrected include paths (6 levels to root)     ║
 # ╚══════════════════════════════════════════════════════════════════╝
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.22)
 project(aurora_jni CXX C)
 
 set(CMAKE_CXX_STANDARD 20)

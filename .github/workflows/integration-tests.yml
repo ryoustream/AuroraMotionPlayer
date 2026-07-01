@@ -143,10 +143,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y $APT_CORE
-          # Build and install GTest from source (ubuntu package is headers-only)
-          cd /usr/src/googletest && sudo cmake . -B build && sudo cmake --build build --parallel 4
-          sudo cp build/lib/*.a /usr/lib/ 2>/dev/null || true
-          cd -
+          # libgtest-dev + libgmock-dev from apt provide ready-to-use static libs
 
       - name: CMake · Configure
         run: |
@@ -230,12 +227,14 @@ jobs:
           path: tests/fixtures/
 
       - name: Fix permissions
-        run: chmod +x build-integration/tests/aurora_integration_tests
+        run: |
+          BIN=$(find build-integration -name "aurora_integration_tests" -type f | head -1)
+          if [ -n "$BIN" ]; then chmod +x "$BIN"; echo "BIN=$BIN" >> $GITHUB_ENV; else echo "::error::aurora_integration_tests not found after artifact download"; exit 1; fi
 
       - name: Run Network integration tests
         working-directory: ${{ github.workspace }}
         run: |
-          ./build-integration/tests/aurora_integration_tests \
+          "$BIN" \
             --gtest_filter="NetworkConfig*:NetworkURL*:Protocol*:NetworkSource*:URL*:HLS*:DASH*:RTMP*:RTSP*" \
             --gtest_output="xml:test-results-network.xml" \
             --gtest_color=yes
@@ -244,7 +243,7 @@ jobs:
       - name: Run Subtitle integration tests
         working-directory: ${{ github.workspace }}
         run: |
-          ./build-integration/tests/aurora_integration_tests \
+          "$BIN" \
             --gtest_filter="SubtitleFormat*:SRTParse*:ASS*:VTT*:SubtitleEngine*:PGSParser*:SubtitleFixture*:ASSRenderer*" \
             --gtest_output="xml:test-results-subtitle.xml" \
             --gtest_color=yes
@@ -307,12 +306,14 @@ jobs:
           path: build-integration/tests/
 
       - name: Fix permissions
-        run: chmod +x build-integration/tests/aurora_integration_tests
+        run: |
+          BIN=$(find build-integration -name "aurora_integration_tests" -type f | head -1)
+          if [ -n "$BIN" ]; then chmod +x "$BIN"; echo "BIN=$BIN" >> $GITHUB_ENV; else echo "::error::aurora_integration_tests not found after artifact download"; exit 1; fi
 
       - name: Run Pipeline integration tests
         working-directory: ${{ github.workspace }}
         run: |
-          ./build-integration/tests/aurora_integration_tests \
+          "$BIN" \
             --gtest_filter="PipelineConfig*:PipelineLifecycle*:PipelineFrame*:PipelineScene*:PipelineConfigProp*" \
             --gtest_output="xml:test-results-pipeline.xml" \
             --gtest_color=yes
@@ -371,12 +372,14 @@ jobs:
           path: tests/fixtures/
 
       - name: Fix permissions
-        run: chmod +x build-integration/tests/aurora_integration_tests
+        run: |
+          BIN=$(find build-integration -name "aurora_integration_tests" -type f | head -1)
+          if [ -n "$BIN" ]; then chmod +x "$BIN"; echo "BIN=$BIN" >> $GITHUB_ENV; else echo "::error::aurora_integration_tests not found after artifact download"; exit 1; fi
 
       - name: Run Decoder integration tests (state machine + config)
         working-directory: ${{ github.workspace }}
         run: |
-          ./build-integration/tests/aurora_integration_tests \
+          "$BIN" \
             --gtest_filter="DecoderState*:DecoderConfig*:HardwareDecoder*" \
             --gtest_output="xml:test-results-decoder-unit.xml" \
             --gtest_color=yes
@@ -387,7 +390,7 @@ jobs:
         if: ${{ github.event.inputs.run_decoder_tests != 'false' }}
         run: |
           # These tests skip gracefully if fixtures missing
-          ./build-integration/tests/aurora_integration_tests \
+          "$BIN" \
             --gtest_filter="NetworkSource*:DecoderFixture*" \
             --gtest_output="xml:test-results-decoder-fixture.xml" \
             --gtest_color=yes || true

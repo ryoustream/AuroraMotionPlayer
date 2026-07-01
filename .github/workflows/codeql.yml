@@ -102,7 +102,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: wrapper
-          build-root-directory: mobile/android
 
       - name: "🔐 Initialize CodeQL"
         uses: github/codeql-action/init@v4

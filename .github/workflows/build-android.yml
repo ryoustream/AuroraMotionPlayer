@@ -70,7 +70,6 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: false
-          build-root-directory: mobile/android
 
       - name: "② Setup Android SDK"
         uses: android-actions/setup-android@v3

@@ -55,18 +55,18 @@ jobs:
           sudo apt-get install -y \
             cmake ninja-build \
             libavcodec-dev libavformat-dev libavutil-dev \
-            libswscale-dev libswresample-dev \
-            libgtest-dev libgmock-dev \
+            libswscale-dev libswresample-dev libavfilter-dev \
+            libfreetype6-dev libgtest-dev libgmock-dev \
             pkg-config \
-            clang-14
+            clang-15
 
       - name: Configure (Linux, no GPU hardware — stubs active)
         run: |
           cmake -B build-linux \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-            -DCMAKE_C_COMPILER=clang-14 \
-            -DCMAKE_CXX_COMPILER=clang++-14 \
+            -DCMAKE_C_COMPILER=clang-15 \
+            -DCMAKE_CXX_COMPILER=clang++-15 \
             -DCMAKE_CXX_STANDARD=20 \
             -DAURORA_BUILD_TESTS=ON \
             -DAURORA_USE_VULKAN=OFF \
@@ -91,7 +91,7 @@ jobs:
           # If test target doesn't exist yet, compile a standalone driver
           if [ ! -f build-linux/aurora_benchmark_tests ]; then
             echo "Building standalone benchmark smoke test..."
-            clang++-14 -std=c++20 -I. \
+            clang++-15 -std=c++20 -I. \
               tests/benchmark/test_benchmark_smoke.cpp \
               core/benchmark/BenchmarkSystem.cpp \
               core/benchmark/FrameCounter.cpp \

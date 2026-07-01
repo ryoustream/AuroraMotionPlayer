@@ -39,9 +39,9 @@ env:
   APT_CORE: >-
     cmake ninja-build pkg-config
     libavcodec-dev libavformat-dev libavutil-dev
-    libswscale-dev libswresample-dev
+    libswscale-dev libswresample-dev libavfilter-dev
     libfreetype6-dev
-    libgtest-dev
+    libgtest-dev libgmock-dev
 
 jobs:
   # ════════════════════════════════════════════════════════════════════════════

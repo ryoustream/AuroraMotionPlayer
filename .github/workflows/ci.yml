@@ -375,7 +375,7 @@ jobs:
           sudo apt-get install -y \
             $APT_CORE \
             libgmock-dev \
-            qt6-base-dev qt6-multimedia-dev \
+            qt6-base-dev qt6-multimedia-dev qt6-svg-dev \
             libgl-dev libvulkan-dev
 
       - name: CMake · Configure (Qt6 desktop, S6 modules)
@@ -510,7 +510,7 @@ jobs:
           cache: gradle
 
       - name: Setup Gradle (handles wrapper jar)
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: wrapper
           build-root-directory: mobile/android

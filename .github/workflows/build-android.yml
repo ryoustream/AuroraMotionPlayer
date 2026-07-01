@@ -66,7 +66,7 @@ jobs:
           cache: gradle
 
       - name: "② Setup Gradle (official action — handles wrapper jar)"
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: wrapper
           cache-read-only: false

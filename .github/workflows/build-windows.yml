@@ -97,7 +97,7 @@ jobs:
           Write-Host "Installing Qt ${{ env.QT_VERSION }}..."
           $Result = aqt install-qt windows desktop ${{ env.QT_VERSION }} win64_msvc2019_64 `
             --outputdir $QtDir `
-            --modules qtmultimedia qtnetwork qtsvg 2>&1
+            --modules qtmultimedia 2>&1
           Write-Host $Result
 
           if ($LASTEXITCODE -ne 0) {
@@ -105,7 +105,7 @@ jobs:
             # Retry once with verbose flag
             aqt install-qt windows desktop ${{ env.QT_VERSION }} win64_msvc2019_64 `
               --outputdir $QtDir `
-              --modules qtmultimedia qtnetwork qtsvg `
+              --modules qtmultimedia `
               -v 2>&1
             if ($LASTEXITCODE -ne 0) { exit 1 }
           }

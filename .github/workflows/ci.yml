@@ -22,7 +22,7 @@ env:
   APT_CORE: >-
     cmake ninja-build pkg-config
     libavcodec-dev libavformat-dev libavutil-dev
-    libswscale-dev libswresample-dev
+    libswscale-dev libswresample-dev libavfilter-dev
     libgtest-dev
 
 jobs:
@@ -719,14 +719,14 @@ jobs:
             $APT_CORE \
             libfreetype6-dev \
             libgmock-dev \
-            clang-14
+            clang-15
 
       - name: Configure
         run: |
           cmake -B build-s10 -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_C_COMPILER=clang-14 \
-            -DCMAKE_CXX_COMPILER=clang++-14 \
+            -DCMAKE_C_COMPILER=clang-15 \
+            -DCMAKE_CXX_COMPILER=clang++-15 \
             -DCMAKE_CXX_STANDARD=20 \
             -DAURORA_BUILD_DESKTOP=OFF \
             -DAURORA_BUILD_TESTS=ON \
@@ -742,7 +742,7 @@ jobs:
           # Build aurora_core first (includes all benchmark/gpu_monitor sources)
           # Then compile the standalone smoke test linking against it
           if [ -f tests/benchmark/test_benchmark_smoke.cpp ]; then
-            clang++-14 -std=c++20 -I.               tests/benchmark/test_benchmark_smoke.cpp               core/benchmark/BenchmarkSystem.cpp               core/benchmark/FrameCounter.cpp               core/gpu_monitor/GPUMonitor.cpp               core/gpu_monitor/CPUMonitor.cpp               -o build-s10/benchmark_smoke               -lpthread               2>&1 | tail -20 && echo "✅ Smoke compile OK" || echo "⚠ Smoke compile failed (non-fatal)"
+            clang++-15 -std=c++20 -I.               tests/benchmark/test_benchmark_smoke.cpp               core/benchmark/BenchmarkSystem.cpp               core/benchmark/FrameCounter.cpp               core/gpu_monitor/GPUMonitor.cpp               core/gpu_monitor/CPUMonitor.cpp               -o build-s10/benchmark_smoke               -lpthread               2>&1 | tail -20 && echo "✅ Smoke compile OK" || echo "⚠ Smoke compile failed (non-fatal)"
           else
             echo "⚠ test_benchmark_smoke.cpp not found — skipping standalone compile"
           fi

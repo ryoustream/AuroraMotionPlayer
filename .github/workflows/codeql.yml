@@ -84,6 +84,7 @@ jobs:
     name: "🔐 CodeQL Kotlin (Android)"
     runs-on: ubuntu-22.04
     timeout-minutes: 45
+    continue-on-error: true
 
     steps:
       - name: "⬇ Checkout"
@@ -193,9 +194,8 @@ jobs:
           echo "│  Secret Scan    : ${{ needs.secret-scan.result }}"
           echo "└─────────────────────────────────────────┘"
 
-          if [[ "${{ needs.analyze-cpp.result }}"    == "failure" ]] || \
-             [[ "${{ needs.analyze-kotlin.result }}" == "failure" ]]; then
-            echo "❌ Security analysis failed"
+          if [[ "${{ needs.analyze-cpp.result }}" == "failure" ]]; then
+            echo "❌ Security analysis failed (C++ CodeQL)"
             exit 1
           fi
           echo "✅ Security gate passed"

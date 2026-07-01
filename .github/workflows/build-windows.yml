@@ -89,15 +89,17 @@ jobs:
           arch: x64
 
       - name: "③ Install Qt ${{ env.QT_VERSION }}"
-        uses: jurplel/install-qt-action@v4
-        with:
-          version:  ${{ env.QT_VERSION }}
-          host:     windows
-          target:   desktop
-          arch:     win64_msvc2019_64
-          modules:  "qtmultimedia qtnetwork qtsvg"
-          cache:    true
-          cache-key-prefix: qt-win64-${{ env.QT_VERSION }}
+        shell: pwsh
+        run: |
+          pip install aqtinstall --quiet
+          $QtDir = "C:\Qt"
+          aqt install-qt windows desktop ${{ env.QT_VERSION }} win64_msvc2019_64 `
+            --outputdir $QtDir `
+            --modules qtmultimedia qtnetwork qtsvg
+          $QtBin = "$QtDir\${{ env.QT_VERSION }}\msvc2019_64"
+          echo "Qt6_DIR=$QtBin\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          echo "$QtBin\bin" >> $env:GITHUB_PATH
+          echo "✓ Qt ${{ env.QT_VERSION }} installed at $QtBin"
 
       - name: "③ Bootstrap vcpkg"
         run: |

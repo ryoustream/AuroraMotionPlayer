@@ -217,7 +217,14 @@ jobs:
             --stacktrace \
             --warning-mode all \
             -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError" \
-            2>&1 | tee ../../build-android.log
+            2>&1 | tee ../../build-android.log || {
+            echo "## ❌ Gradle Build Errors" >> $GITHUB_STEP_SUMMARY
+            grep -E "^e: |error:|FAILED:|Exception" ../../build-android.log | head -40 >> $GITHUB_STEP_SUMMARY
+            grep -E "^e: |error:" ../../build-android.log | head -20 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit 1
+          }
 
       # ─────────────────────────────────────────────────────────────────────
       # 7. LINT

@@ -102,7 +102,17 @@ jobs:
             -DCMAKE_CXX_FLAGS="--coverage -fprofile-arcs -ftest-coverage"
 
       - name: CMake · Build
-        run: cmake --build build-ci --parallel 4
+        run: |
+          cmake --build build-ci --parallel 4 2>&1 | tee /tmp/build-ci.log
+          EXIT=${PIPESTATUS[0]}
+          if [ $EXIT -ne 0 ]; then
+            echo "## ❌ Build Errors" >> $GITHUB_STEP_SUMMARY
+            grep -E "error:|FAILED:" /tmp/build-ci.log | head -40 >> $GITHUB_STEP_SUMMARY
+            grep -E "error:" /tmp/build-ci.log | head -20 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit $EXIT
+          fi
 
       - name: CTest · Run
         run: |
@@ -735,7 +745,17 @@ jobs:
             -DAURORA_ONNX=OFF
 
       - name: Build aurora_core (includes gpu_monitor)
-        run: cmake --build build-s10 --parallel 4 --target aurora_core
+        run: |
+          cmake --build build-s10 --parallel 4 --target aurora_core 2>&1 | tee /tmp/build-s10.log
+          EXIT=${PIPESTATUS[0]}
+          if [ $EXIT -ne 0 ]; then
+            echo "## ❌ S10 Build Errors" >> $GITHUB_STEP_SUMMARY
+            grep -E "error:|FAILED:" /tmp/build-s10.log | head -40 >> $GITHUB_STEP_SUMMARY
+            grep -E "error:" /tmp/build-s10.log | head -20 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit $EXIT
+          fi
 
       - name: Compile benchmark smoke test
         run: |

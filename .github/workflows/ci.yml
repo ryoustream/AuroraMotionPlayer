@@ -383,13 +383,25 @@ jobs:
 
       - name: CMake · Configure (Qt6 desktop, S6 modules)
         run: |
+          # Locate Qt6 cmake config dir (parent of Qt6/ directory)
+          QT6_CMAKE=$(find /usr/lib -maxdepth 4 -name "Qt6Config.cmake" 2>/dev/null | head -1)
+          QT6_PREFIX=$(dirname $(dirname "$QT6_CMAKE") 2>/dev/null || echo "/usr/lib/x86_64-linux-gnu/cmake")
+          echo "Qt6 cmake prefix: $QT6_PREFIX"
+
           cmake -B build-s6 -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_PREFIX_PATH="$QT6_PREFIX" \
             -DAURORA_BUILD_DESKTOP=ON \
             -DAURORA_BUILD_TESTS=OFF \
             -DAURORA_USE_VULKAN=OFF \
             -DAURORA_NCNN=OFF \
-            -DAURORA_ONNX=OFF
+            -DAURORA_ONNX=OFF \
+            2>&1 | tee /tmp/cmake-s6.log
+          CMAKE_EXIT=${PIPESTATUS[0]}
+          if [ $CMAKE_EXIT -ne 0 ]; then
+            tail -50 /tmp/cmake-s6.log | while IFS= read -r line; do echo "::error::$line"; done
+            exit $CMAKE_EXIT
+          fi
 
       - name: Build · S6 Windows UI targets
         continue-on-error: true

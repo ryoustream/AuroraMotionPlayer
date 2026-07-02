@@ -70,7 +70,13 @@ jobs:
             -DCMAKE_CXX_STANDARD=20 \
             -DAURORA_BUILD_TESTS=ON \
             -DAURORA_USE_VULKAN=OFF \
-            -DAURORA_USE_DX11=OFF
+            -DAURORA_USE_DX11=OFF \
+            2>&1 | tee /tmp/cmake-linux.log
+          CMAKE_EXIT=${PIPESTATUS[0]}
+          if [ $CMAKE_EXIT -ne 0 ]; then
+            tail -40 /tmp/cmake-linux.log | while IFS= read -r line; do echo "::error::$line"; done
+            exit $CMAKE_EXIT
+          fi
 
       - name: Build aurora_core (benchmark modules)
         run: |
@@ -146,19 +152,27 @@ jobs:
           ninjaVersion: latest
 
       - name: Configure (Windows — D3DKMT + PDH path)
+        shell: pwsh
         run: |
+          # Use Visual Studio generator (Ninja may not be available without extra setup)
           cmake -B build-win `
-            -G Ninja `
+            -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
             -DCMAKE_CXX_STANDARD=20 `
             -DAURORA_BUILD_TESTS=ON `
             -DAURORA_USE_VULKAN=OFF `
             -DAURORA_USE_DX11=ON
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::CMake configure failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+          }
 
       - name: Build benchmark modules
+        shell: pwsh
         run: |
           cmake --build build-win `
             --target aurora_core `
+            --config ${{ env.BUILD_TYPE }} `
             --parallel 4
         continue-on-error: false
 

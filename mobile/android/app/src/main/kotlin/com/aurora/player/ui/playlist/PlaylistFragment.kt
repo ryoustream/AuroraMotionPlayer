@@ -49,7 +49,14 @@ class PlaylistFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         adapter = PlaylistAdapter(
-            onItemClick = { item -> viewModel.playItem(item) },
+            onItemClick = { item ->
+                viewModel.playItem(item)
+                // Navigate back to player and open the URI
+                val playerVm = androidx.lifecycle.ViewModelProvider(requireActivity())
+                    .get(com.aurora.player.viewmodel.PlayerViewModel::class.java)
+                playerVm.open(item.uri)
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            },
             onItemRemove = { item -> viewModel.removeItem(item) }
         )
         recyclerView.adapter = adapter
@@ -76,11 +83,35 @@ class PlaylistFragment : Fragment() {
     }
 
     private fun scanDeviceVideos() {
+        // Check permissions before scanning
+        val ctx = requireContext()
+        val hasPermission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                ctx, android.Manifest.permission.READ_MEDIA_VIDEO
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else {
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                ctx, android.Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+
+        if (!hasPermission) {
+            android.widget.Toast.makeText(
+                ctx, "Izin media diperlukan untuk scan video", android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
         lifecycleScope.launch {
             val items = withContext(Dispatchers.IO) {
                 queryMediaStore(requireContext())
             }
             viewModel.addItems(items)
+            if (items.isEmpty()) {
+                android.widget.Toast.makeText(
+                    requireContext(), "Tidak ada video ditemukan", android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 

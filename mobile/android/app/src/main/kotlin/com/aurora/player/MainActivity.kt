@@ -1,12 +1,20 @@
 package com.aurora.player
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
 import com.aurora.player.databinding.ActivityMainBinding
@@ -15,14 +23,15 @@ import com.aurora.player.ui.pip.PiPManager
 import com.aurora.player.ui.playlist.PlaylistFragment
 import com.aurora.player.ui.subtitle.SubtitleFragment
 import com.aurora.player.viewmodel.PlayerViewModel
-import androidx.activity.viewModels
 import kotlinx.coroutines.launch
 
 /**
- * Aurora Motion Player — MainActivity (Session 7 update)
+ * Aurora Motion Player — MainActivity (S16)
  *
- * Hosts all fragments via FragmentContainerView.
- * Wires PiPManager, SAF pickers, and intent handling.
+ * Added:
+ *  - Runtime permission request (READ_MEDIA_VIDEO, READ_MEDIA_AUDIO / READ_EXTERNAL_STORAGE)
+ *  - MANAGE_EXTERNAL_STORAGE flow for full filesystem access on Android 11+
+ *  - Re-request on resume if permission was revoked
  */
 class MainActivity : AppCompatActivity() {
 
@@ -30,16 +39,43 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pipManager: PiPManager
     private val vm: PlayerViewModel by viewModels()
 
+    // ── Runtime permission launcher ───────────────────────────────────────────
+
+    private val permLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        val denied = results.filterValues { !it }.keys
+        if (denied.isNotEmpty()) {
+            Toast.makeText(
+                this,
+                "Akses media diperlukan untuk memutar video.\n" +
+                "Buka Pengaturan → Izin → Berikan akses media.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     // ── SAF pickers ───────────────────────────────────────────────────────────
 
     private val videoFilePicker = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
-    ) { uri -> uri?.let { openUri(it) } }
+    ) { uri ->
+        uri?.let {
+            // Persist permission so we can read the file across sessions
+            contentResolver.takePersistableUriPermission(
+                it, Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            openUri(it)
+        }
+    }
 
     private val subtitleFilePicker = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let { u ->
+            contentResolver.takePersistableUriPermission(
+                u, Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
             lifecycleScope.launch { vm.loadSubtitleFile(u) }
         }
     }
@@ -55,8 +91,6 @@ class MainActivity : AppCompatActivity() {
         window.setDecorFitsSystemWindows(false)
 
         pipManager = PiPManager(this).also { it.register() }
-
-        // Wire PiP callbacks to ViewModel
         pipManager.onPlayPauseCallback = { vm.togglePlayPause() }
         pipManager.onStopCallback      = { vm.stop() }
         pipManager.onSeekCallback      = { delta -> vm.seekRelative(delta) }
@@ -67,7 +101,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Request permissions immediately on first launch
+        requestMediaPermissions()
+
         handleIntent(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Re-check after user returns from Settings
+        requestMediaPermissions()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -77,7 +120,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        // Auto-enter PiP when user presses home during playback
         pipManager.onUserLeaveHint(
             isPlaying = vm.isPlaying.value == true,
             position  = vm.position.value ?: 0.0,
@@ -98,6 +140,49 @@ class MainActivity : AppCompatActivity() {
         pipManager.unregister()
         super.onDestroy()
     }
+
+    // ── Permissions ───────────────────────────────────────────────────────────
+
+    private fun requestMediaPermissions() {
+        val needed = buildList {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                // Android 13+: granular media permissions
+                if (!hasPermission(Manifest.permission.READ_MEDIA_VIDEO))
+                    add(Manifest.permission.READ_MEDIA_VIDEO)
+                if (!hasPermission(Manifest.permission.READ_MEDIA_AUDIO))
+                    add(Manifest.permission.READ_MEDIA_AUDIO)
+            } else {
+                // Android 12 and below
+                if (!hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE))
+                    add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
+        if (needed.isNotEmpty()) permLauncher.launch(needed.toTypedArray())
+
+        // MANAGE_EXTERNAL_STORAGE: needed for scanning arbitrary directories
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                AlertDialog.Builder(this)
+                    .setTitle("Izin Penyimpanan Penuh")
+                    .setMessage(
+                        "Aurora memerlukan akses ke semua file untuk scan dan memutar video " +
+                        "dari seluruh penyimpanan.\n\nKetuk OK untuk membuka pengaturan."
+                    )
+                    .setPositiveButton("Buka Pengaturan") { _, _ ->
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                            Uri.parse("package:$packageName")
+                        )
+                        startActivity(intent)
+                    }
+                    .setNegativeButton("Lewati") { d, _ -> d.dismiss() }
+                    .show()
+            }
+        }
+    }
+
+    private fun hasPermission(perm: String) =
+        ContextCompat.checkSelfPermission(this, perm) == PackageManager.PERMISSION_GRANTED
 
     // ── Navigation ────────────────────────────────────────────────────────────
 
@@ -126,7 +211,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent?.action == Intent.ACTION_VIEW) {
-            intent.data?.let { openUri(it) }
+            intent.data?.let { uri ->
+                // Persist URI permission if it's a content URI
+                runCatching {
+                    contentResolver.takePersistableUriPermission(
+                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                }
+                openUri(uri)
+            }
         }
     }
 

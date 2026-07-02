@@ -61,3 +61,23 @@
 # Keep Glide generated API
 -keep public class * implements com.bumptech.glide.module.GlideModule
 -keep class * extends com.bumptech.glide.module.AppGlideModule { <init>(...); }
+
+# ExoPlayer / Media3
+-keep class androidx.media3.** { *; }
+-dontwarn androidx.media3.**
+-keep class com.google.android.exoplayer2.** { *; }
+
+# Keep all Aurora player classes
+-keep class com.aurora.player.** { *; }
+-keepclassmembers class com.aurora.player.** { *; }
+
+# Keep Lifecycle ViewModels
+-keepclassmembers class * extends androidx.lifecycle.ViewModel {
+    public <init>(...);
+}
+-keepclassmembers class * extends androidx.lifecycle.AndroidViewModel {
+    public <init>(...);
+}
+
+# Keep data classes used in RecyclerView adapters
+-keep class com.aurora.player.ui.playlist.PlaylistItem { *; }

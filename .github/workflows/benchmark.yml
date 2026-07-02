@@ -84,6 +84,13 @@ jobs:
             --target aurora_core \
             --parallel $(nproc) \
             2>&1 | tee /tmp/bench-linux-build.log
+          BUILD_EXIT=${PIPESTATUS[0]}
+          if [ $BUILD_EXIT -ne 0 ]; then
+            grep -E "error:|FAILED:" /tmp/bench-linux-build.log | head -20 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit $BUILD_EXIT
+          fi
 
           # Verify benchmark objects are present
           echo "=== Verifying benchmark objects ==="

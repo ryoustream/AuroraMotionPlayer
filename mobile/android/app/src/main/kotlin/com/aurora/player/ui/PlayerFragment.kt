@@ -121,9 +121,19 @@ class PlayerFragment : Fragment() {
 
     private fun setupSurface() {
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
-            override fun surfaceCreated(h: SurfaceHolder)          = vm.player.surfaceCreated(h.surface)
-            override fun surfaceChanged(h: SurfaceHolder, f: Int, w: Int, ht: Int) = vm.player.surfaceChanged(w, ht)
-            override fun surfaceDestroyed(h: SurfaceHolder)        = vm.player.surfaceDestroyed()
+            override fun surfaceCreated(h: SurfaceHolder) {
+                // Wire ExoPlayer (primary engine) to the SurfaceView
+                vm.exoPlayer.setVideoSurfaceView(surfaceView)
+                // Also wire NativePlayer for AI overlay
+                vm.player.surfaceCreated(h.surface)
+            }
+            override fun surfaceChanged(h: SurfaceHolder, f: Int, w: Int, ht: Int) {
+                vm.player.surfaceChanged(w, ht)
+            }
+            override fun surfaceDestroyed(h: SurfaceHolder) {
+                vm.exoPlayer.clearVideoSurfaceView(surfaceView)
+                vm.player.surfaceDestroyed()
+            }
         })
     }
 
@@ -371,10 +381,8 @@ class PlayerFragment : Fragment() {
     // ── Public API ────────────────────────────────────────────────────────────
 
     fun openUri(uri: Uri) {
-        val ctx = requireContext()
-        val resolved = UriUtils.resolveToPath(ctx, uri) ?: uri.toString()
-        val title    = UriUtils.getDisplayName(ctx, uri)
-        vm.openPath(resolved, title)
+        // Pass URI directly — ExoPlayer handles content://, file://, http:// natively
+        vm.open(uri)
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

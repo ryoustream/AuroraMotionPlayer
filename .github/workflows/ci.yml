@@ -372,9 +372,11 @@ jobs:
       - name: Install Qt6 + deps
         run: |
           sudo apt-get update -qq
-          # qt6-svg-dev / libqt6svg6-dev — name varies by Ubuntu version
-          QT_SVG_PKG=$(apt-cache show qt6-svg-dev 2>/dev/null | grep -q "^Package:" \
-            && echo "qt6-svg-dev" || echo "libqt6svg6-dev")
+          # qt6-svg-dev available on ubuntu-22.04+ via apt
+          QT_SVG_PKG="qt6-svg-dev"
+          if ! apt-cache show qt6-svg-dev >/dev/null 2>&1; then
+            QT_SVG_PKG="libqt6svg6-dev"
+          fi
           sudo apt-get install -y \
             $APT_CORE \
             libgmock-dev \
@@ -384,8 +386,8 @@ jobs:
       - name: CMake · Configure (Qt6 desktop, S6 modules)
         run: |
           # Locate Qt6 cmake config dir (parent of Qt6/ directory)
-          QT6_CMAKE=$(find /usr/lib -maxdepth 4 -name "Qt6Config.cmake" 2>/dev/null | head -1)
-          QT6_PREFIX=$(dirname $(dirname "$QT6_CMAKE") 2>/dev/null || echo "/usr/lib/x86_64-linux-gnu/cmake")
+          QT6_CMAKE=$(find /usr/lib -maxdepth 4 -name "Qt6Config.cmake" 2>/dev/null -print -quit)
+          QT6_PREFIX=$([ -n "$QT6_CMAKE" ] && dirname "$(dirname "$QT6_CMAKE")" || echo "/usr/lib/x86_64-linux-gnu/cmake")
           echo "Qt6 cmake prefix: $QT6_PREFIX"
 
           cmake -B build-s6 -G Ninja \

@@ -140,43 +140,27 @@ jobs:
       - name: "③ Install Vulkan SDK"
         shell: pwsh
         run: |
-          # windows-2022 GitHub-hosted runners have Vulkan SDK pre-installed
-          # Check multiple known locations
-          $preInstalled = @(
-            "C:\VulkanSDK",
-            "$env:VULKAN_SDK",
-            (Get-ChildItem "C:\VulkanSDK" -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1 -ExpandProperty FullName)
-          ) | Where-Object { $_ -and (Test-Path "$_\Include\vulkan\vulkan.h") } | Select-Object -First 1
+          # Check for pre-installed Vulkan SDK on windows-2022 runners
+          $sdkPath = Get-ChildItem "C:\VulkanSDK" -ErrorAction SilentlyContinue |
+            Where-Object { Test-Path "$($_.FullName)\Include\vulkan\vulkan.h" } |
+            Sort-Object Name -Descending | Select-Object -First 1 -ExpandProperty FullName
 
-          if ($preInstalled) {
-            Write-Host "✓ Using pre-installed Vulkan SDK at $preInstalled"
-            echo "VULKAN_SDK=$preInstalled" >> $env:GITHUB_ENV
-            echo "$preInstalled\Bin" >> $env:GITHUB_PATH
+          if ($sdkPath) {
+            Write-Host "✓ Pre-installed Vulkan SDK: $sdkPath"
+            echo "VULKAN_SDK=$sdkPath" >> $env:GITHUB_ENV
+            echo "$sdkPath\Bin" >> $env:GITHUB_PATH
+            echo "AURORA_USE_VULKAN=ON" >> $env:GITHUB_ENV
           } else {
-            Write-Host "Downloading Vulkan SDK $env:VULKAN_VER..."
-            $url = "https://sdk.lunarg.com/sdk/download/$env:VULKAN_VER/windows/VulkanSDK-$env:VULKAN_VER-Installer.exe"
-            try {
-              Invoke-WebRequest -Uri $url -OutFile "$env:TEMP\VulkanSDK.exe" -TimeoutSec 180
-              Start-Process "$env:TEMP\VulkanSDK.exe" `
-                -ArgumentList "--accept-licenses --default-answer --confirm-command install" `
-                -Wait -NoNewWindow
-              echo "VULKAN_SDK=C:\VulkanSDK\$env:VULKAN_VER" >> $env:GITHUB_ENV
-              echo "C:\VulkanSDK\$env:VULKAN_VER\Bin" >> $env:GITHUB_PATH
-            } catch {
-              Write-Host "::warning::Vulkan SDK download failed: $_"
-              Write-Host "::warning::Continuing without Vulkan SDK (AURORA_USE_VULKAN=OFF in CMake)"
-              echo "VULKAN_SDK=" >> $env:GITHUB_ENV
-            }
+            Write-Host "⚠ No Vulkan SDK found — building with AURORA_USE_VULKAN=OFF"
+            echo "VULKAN_SDK=" >> $env:GITHUB_ENV
+            echo "AURORA_USE_VULKAN=OFF" >> $env:GITHUB_ENV
           }
 
       - name: "③ Set Vulkan env"
         shell: pwsh
         run: |
-          if ($env:VULKAN_SDK -and (Test-Path "$env:VULKAN_SDK\Include\vulkan\vulkan.h")) {
-            Write-Host "✓ Vulkan SDK: $env:VULKAN_SDK"
-          } else {
-            Write-Host "⚠ No Vulkan SDK found — builds will use AURORA_USE_VULKAN=OFF"
-          }
+          Write-Host "VULKAN_SDK=$env:VULKAN_SDK"
+          Write-Host "AURORA_USE_VULKAN=$env:AURORA_USE_VULKAN"
 
       # ─────────────────────────────────────────────────────────────────────
       # 4. DEPENDENCIES (vcpkg)
@@ -222,8 +206,8 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────
       - name: "⑤ CMake · Configure"
         run: |
-          $useVulkan = if ($env:VULKAN_SDK -and (Test-Path "$env:VULKAN_SDK\Include\vulkan\vulkan.h")) { "ON" } else { "OFF" }
-          Write-Host "AURORA_USE_VULKAN=$useVulkan"
+          $useVulkan = if ($env:AURORA_USE_VULKAN -eq "ON") { "ON" } else { "OFF" }
+          Write-Host "AURORA_USE_VULKAN=$useVulkan (VULKAN_SDK='$env:VULKAN_SDK')"
 
           cmake -B build `
             -G "Visual Studio 17 2022" -A x64 `

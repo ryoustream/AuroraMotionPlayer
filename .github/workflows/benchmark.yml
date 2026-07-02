@@ -83,7 +83,7 @@ jobs:
           cmake --build build-linux \
             --target aurora_core \
             --parallel $(nproc) \
-            2>&1 | tee build-linux/build.log
+            2>&1 | tee /tmp/bench-linux-build.log
 
           # Verify benchmark objects are present
           echo "=== Verifying benchmark objects ==="
@@ -127,7 +127,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: benchmark-linux-log
-          path: build-linux/build.log
+          path: /tmp/bench-linux-build.log
 
   # ════════════════════════════════════════════════════════════════════════════
   # JOB 2 — Windows cross-compile header validation (MSVC-compat)
@@ -154,16 +154,23 @@ jobs:
       - name: Configure (Windows — D3DKMT + PDH path)
         shell: pwsh
         run: |
-          # Use Visual Studio generator (Ninja may not be available without extra setup)
-          cmake -B build-win `
+          # Visual Studio 17 2022 generator — no extra Ninja setup needed
+          # DX11/DX12 headers are available in Windows SDK bundled with VS2022
+          $output = cmake -B build-win `
             -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
             -DCMAKE_CXX_STANDARD=20 `
+            -DAURORA_BUILD_DESKTOP=OFF `
             -DAURORA_BUILD_TESTS=ON `
             -DAURORA_USE_VULKAN=OFF `
-            -DAURORA_USE_DX11=ON
+            -DAURORA_USE_DX11=OFF `
+            -DAURORA_USE_DX12=OFF `
+            -DAURORA_NCNN=OFF `
+            -DAURORA_ONNX=OFF `
+            2>&1
+          Write-Host $output
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "::error::CMake configure failed with exit code $LASTEXITCODE"
+            $output | ForEach-Object { Write-Host "::error::$_" }
             exit $LASTEXITCODE
           }
 
@@ -173,7 +180,8 @@ jobs:
           cmake --build build-win `
             --target aurora_core `
             --config ${{ env.BUILD_TYPE }} `
-            --parallel 4
+            --parallel 4 `
+            -- /verbosity:minimal
         continue-on-error: false
 
       - name: Verify D3DKMT + PDH symbols

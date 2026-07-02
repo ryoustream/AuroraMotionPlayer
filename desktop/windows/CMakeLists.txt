@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.22)
 
 find_package(Qt6 REQUIRED COMPONENTS
     Core Gui Widgets Multimedia Network Concurrent Svg OpenGL

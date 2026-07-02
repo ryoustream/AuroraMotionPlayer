@@ -401,7 +401,9 @@ jobs:
             2>&1 | tee /tmp/cmake-s6.log
           CMAKE_EXIT=${PIPESTATUS[0]}
           if [ $CMAKE_EXIT -ne 0 ]; then
-            tail -50 /tmp/cmake-s6.log | while IFS= read -r line; do echo "::error::$line"; done
+            tac /tmp/cmake-s6.log 2>/dev/null | head -20 | tac | while IFS= read -r line; do
+              echo "::error::$line"
+            done
             exit $CMAKE_EXIT
           fi
 

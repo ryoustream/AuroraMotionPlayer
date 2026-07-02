@@ -74,7 +74,10 @@ jobs:
             2>&1 | tee /tmp/cmake-linux.log
           CMAKE_EXIT=${PIPESTATUS[0]}
           if [ $CMAKE_EXIT -ne 0 ]; then
-            tail -40 /tmp/cmake-linux.log | while IFS= read -r line; do echo "::error::$line"; done
+            # Emit LAST 20 lines reversed (error at end, not beginning)
+            tac /tmp/cmake-linux.log 2>/dev/null | head -20 | tac | while IFS= read -r line; do
+              echo "::error::$line"
+            done
             exit $CMAKE_EXIT
           fi
 
@@ -184,12 +187,16 @@ jobs:
       - name: Build benchmark modules
         shell: pwsh
         run: |
-          cmake --build build-win `
+          $output = cmake --build build-win `
             --target aurora_core `
             --config ${{ env.BUILD_TYPE }} `
             --parallel 4 `
-            -- /verbosity:minimal
-        continue-on-error: false
+            -- /verbosity:minimal 2>&1
+          Write-Host $output
+          if ($LASTEXITCODE -ne 0) {
+            ($output | Select-Object -Last 30) | ForEach-Object { Write-Host "::error::$_" }
+            exit $LASTEXITCODE
+          }
 
       - name: Verify D3DKMT + PDH symbols
         shell: cmd

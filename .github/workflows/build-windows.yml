@@ -205,25 +205,44 @@ jobs:
       # 5. CMAKE CONFIGURE
       # ─────────────────────────────────────────────────────────────────────
       - name: "⑤ CMake · Configure"
+        shell: pwsh
         run: |
           $useVulkan = if ($env:AURORA_USE_VULKAN -eq "ON") { "ON" } else { "OFF" }
-          Write-Host "AURORA_USE_VULKAN=$useVulkan (VULKAN_SDK='$env:VULKAN_SDK')"
+          Write-Host "AURORA_USE_VULKAN=$useVulkan"
+          Write-Host "Qt6_DIR=$env:Qt6_DIR"
+          Write-Host "FFMPEG_PREFIX=$env:FFMPEG_PREFIX"
 
-          cmake -B build `
-            -G "Visual Studio 17 2022" -A x64 `
-            -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE" `
-            -DVCPKG_TARGET_TRIPLET=x64-windows `
-            -DAURORA_VERSION="$env:AURORA_VER" `
-            -DAURORA_BUILD_DESKTOP=ON `
-            -DAURORA_BUILD_TESTS=ON `
-            -DAURORA_USE_VULKAN=$useVulkan `
-            -DAURORA_USE_DX11=ON `
-            -DAURORA_USE_DX12=ON `
-            -DFFMPEG_PREFIX="$env:FFMPEG_PREFIX" `
-            -DONNXRUNTIME_ROOT="$env:ONNXRUNTIME_ROOT" `
-            -DQt6_DIR="$env:Qt6_DIR" `
-            -DVULKAN_SDK="$env:VULKAN_SDK" `
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          $cmakeArgs = @(
+            "-B", "build",
+            "-G", "Visual Studio 17 2022", "-A", "x64",
+            "-DCMAKE_BUILD_TYPE=$env:BUILD_TYPE",
+            "-DAURORA_VERSION=$env:AURORA_VER",
+            "-DAURORA_BUILD_DESKTOP=ON",
+            "-DAURORA_BUILD_TESTS=ON",
+            "-DAURORA_USE_VULKAN=$useVulkan",
+            "-DAURORA_USE_DX11=ON",
+            "-DAURORA_USE_DX12=ON",
+            "-DAURORA_NCNN=OFF",
+            "-DAURORA_ONNX=OFF",
+            "-DQt6_DIR=$env:Qt6_DIR",
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+          )
+          if ($env:FFMPEG_PREFIX) {
+            $cmakeArgs += "-DFFMPEG_PREFIX=$env:FFMPEG_PREFIX"
+          }
+          if ($env:VULKAN_SDK) {
+            $cmakeArgs += "-DVULKAN_SDK=$env:VULKAN_SDK"
+          }
+
+          $output = & cmake @cmakeArgs 2>&1
+          Write-Host $output
+          if ($LASTEXITCODE -ne 0) {
+            # Emit last 30 lines as error annotations
+            ($output | Select-Object -Last 30) | ForEach-Object {
+              Write-Host "::error::$_"
+            }
+            exit $LASTEXITCODE
+          }
 
       # ─────────────────────────────────────────────────────────────────────
       # 6. BUILD

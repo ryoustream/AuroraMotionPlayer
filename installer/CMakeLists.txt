@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.22)
 
 # ── Installer / packaging targets ────────────────────────────────────────────
 # These targets are available on Windows only and depend on WiX 4 being present.

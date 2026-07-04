@@ -385,20 +385,35 @@ jobs:
 
       - name: CMake · Configure (Qt6 desktop, S6 modules)
         run: |
-          # Locate Qt6 cmake config dir (parent of Qt6/ directory)
-          QT6_CMAKE=$(find /usr/lib -maxdepth 4 -name "Qt6Config.cmake" 2>/dev/null -print -quit)
-          QT6_PREFIX=$([ -n "$QT6_CMAKE" ] && dirname "$(dirname "$QT6_CMAKE")" || echo "/usr/lib/x86_64-linux-gnu/cmake")
-          echo "Qt6 cmake prefix: $QT6_PREFIX"
+          # Locate Qt6_DIR — apt installs to /usr/lib/<arch>/cmake/Qt6 on ubuntu
+          ARCH=$(uname -m | sed 's/x86_64/x86_64-linux-gnu/;s/aarch64/aarch64-linux-gnu/')
+          QT6_DIR_CANDIDATES=(
+            "/usr/lib/${ARCH}/cmake/Qt6"
+            "/usr/lib/x86_64-linux-gnu/cmake/Qt6"
+            "/usr/lib/cmake/Qt6"
+          )
+          QT6_DIR=""
+          for d in "${QT6_DIR_CANDIDATES[@]}"; do
+            if [ -f "${d}/Qt6Config.cmake" ]; then QT6_DIR="$d"; break; fi
+          done
+          # Fallback: use find with -print -quit
+          if [ -z "$QT6_DIR" ]; then
+            QT6_CMAKE=$(find /usr/lib -maxdepth 6 -name "Qt6Config.cmake" 2>/dev/null -print -quit)
+            [ -n "$QT6_CMAKE" ] && QT6_DIR=$(dirname "$QT6_CMAKE")
+          fi
+          echo "Qt6_DIR=${QT6_DIR:-NOT_FOUND}"
 
-          cmake -B build-s6 -G Ninja \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_PREFIX_PATH="$QT6_PREFIX" \
-            -DAURORA_BUILD_DESKTOP=ON \
-            -DAURORA_BUILD_TESTS=OFF \
-            -DAURORA_USE_VULKAN=OFF \
-            -DAURORA_NCNN=OFF \
-            -DAURORA_ONNX=OFF \
-            2>&1 | tee /tmp/cmake-s6.log
+          CMAKE_ARGS=(-B build-s6 -G Ninja
+            -DCMAKE_BUILD_TYPE=Debug
+            -DAURORA_BUILD_DESKTOP=ON
+            -DAURORA_BUILD_TESTS=OFF
+            -DAURORA_USE_VULKAN=OFF
+            -DAURORA_NCNN=OFF
+            -DAURORA_ONNX=OFF
+          )
+          [ -n "$QT6_DIR" ] && CMAKE_ARGS+=("-DQt6_DIR=${QT6_DIR}")
+
+          cmake "${CMAKE_ARGS[@]}" 2>&1 | tee /tmp/cmake-s6.log
           CMAKE_EXIT=${PIPESTATUS[0]}
           if [ $CMAKE_EXIT -ne 0 ]; then
             tac /tmp/cmake-s6.log 2>/dev/null | head -20 | tac | while IFS= read -r line; do
@@ -406,7 +421,6 @@ jobs:
             done
             exit $CMAKE_EXIT
           fi
-
       - name: Build · S6 Windows UI targets
         continue-on-error: true
         run: |

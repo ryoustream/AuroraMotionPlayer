@@ -20,15 +20,6 @@
 
 namespace aurora::benchmark {
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-static std::string readFile(const std::string& path) {
-    std::ifstream f(path);
-    if (!f) return {};
-    std::string s((std::istreambuf_iterator<char>(f)),
-                   std::istreambuf_iterator<char>());
-    return s;
-}
-
 CPUMonitor::CPUMonitor()  = default;
 CPUMonitor::~CPUMonitor() { shutdown(); }
 

@@ -248,11 +248,24 @@ jobs:
       # 6. BUILD
       # ─────────────────────────────────────────────────────────────────────
       - name: "⑥ CMake · Build"
+        shell: pwsh
         run: |
-          cmake --build build `
+          $output = cmake --build build `
             --config $env:BUILD_TYPE `
             --parallel $env:NUMBER_OF_PROCESSORS `
-            -- /verbosity:minimal /nologo /p:WarningLevel=3
+            -- /verbosity:normal /nologo /p:WarningLevel=2 2>&1
+          Write-Host $output
+          if ($LASTEXITCODE -ne 0) {
+            # Emit error lines as annotations (MSVC errors contain 'error C' or 'error LNK')
+            $errors = $output | Where-Object { $_ -match 'error C\d|error LNK\d|FAILED|fatal error' }
+            if ($errors) {
+              $errors | Select-Object -Last 30 | ForEach-Object { Write-Host "::error::$_" }
+            } else {
+              # Emit last 30 lines if no specific pattern matched
+              ($output | Select-Object -Last 30) | ForEach-Object { Write-Host "::error::$_" }
+            }
+            exit $LASTEXITCODE
+          }
 
       # ─────────────────────────────────────────────────────────────────────
       # 7. TEST

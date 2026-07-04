@@ -68,9 +68,12 @@ jobs:
             -DCMAKE_C_COMPILER=clang-15 \
             -DCMAKE_CXX_COMPILER=clang++-15 \
             -DCMAKE_CXX_STANDARD=20 \
+            -DAURORA_BUILD_DESKTOP=OFF \
             -DAURORA_BUILD_TESTS=ON \
             -DAURORA_USE_VULKAN=OFF \
             -DAURORA_USE_DX11=OFF \
+            -DAURORA_NCNN=OFF \
+            -DAURORA_ONNX=OFF \
             2>&1 | tee /tmp/cmake-linux.log
           CMAKE_EXIT=${PIPESTATUS[0]}
           if [ $CMAKE_EXIT -ne 0 ]; then

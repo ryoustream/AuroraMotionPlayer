@@ -15,7 +15,7 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-namespace aurora::core {
+namespace aurora::renderer {
 
 // ── Fullscreen quad vertex ────────────────────────────────────────────────────
 struct QuadVertex {
@@ -66,7 +66,9 @@ DX12Renderer::DX12Renderer()  = default;
 DX12Renderer::~DX12Renderer() { shutdown(); }
 
 // ── Initialize ───────────────────────────────────────────────────────────────
-bool DX12Renderer::initialize(void* windowHandle, int width, int height) {
+bool DX12Renderer::init(void* nativeWindowHandle, const RendererConfig& cfg) {
+    int width = cfg.width; int height = cfg.height;
+    void* windowHandle = nativeWindowHandle;
     m_width  = width;
     m_height = height;
     HWND hwnd = static_cast<HWND>(windowHandle);
@@ -429,8 +431,9 @@ bool DX12Renderer::createYUVTextures(int width, int height) {
 }
 
 // ── Render Frame ──────────────────────────────────────────────────────────────
-bool DX12Renderer::renderFrame(const VideoFrame& frame) {
-    if (!m_initialized) return false;
+void DX12Renderer::renderFrame(video::VideoFramePtr framePtr) {
+    if (!m_initialized || !framePtr) return;
+    const VideoFrame& frame = *framePtr;
 
     uploadYUVFrame(frame);
     recordCommandList(m_frameIndex);
@@ -529,7 +532,8 @@ void DX12Renderer::resize(int width, int height) {
 }
 
 // ── HDR mode ──────────────────────────────────────────────────────────────────
-void DX12Renderer::setHDRMode(bool enabled) {
+void DX12Renderer::setHDRMetadata(float maxLuminance, float minLuminance) {
+    bool enabled = (maxLuminance > 0.0f);
     m_hdrMode = enabled;
     if (enabled) enableHDROutput();
 }
@@ -570,6 +574,10 @@ void DX12Renderer::shutdown() {
 // ── Frame resources ───────────────────────────────────────────────────────────
 bool DX12Renderer::createFrameResources() { return true; } // Handled per-field above
 
-} // namespace aurora::core
+void DX12Renderer::present() {
+    // Presentation handled in submitAndPresent() called from renderFrame
+}
+
+} // namespace aurora::renderer
 
 #endif // _WIN32

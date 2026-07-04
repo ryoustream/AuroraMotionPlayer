@@ -13,6 +13,7 @@
 #ifdef _WIN32
 
 #include "RendererBase.h"
+#include "video/VideoFrame.h"
 
 #include <d3d12.h>
 #include <d3d12sdklayers.h>
@@ -25,7 +26,7 @@
 
 using Microsoft::WRL::ComPtr;
 
-namespace aurora::core {
+namespace aurora::renderer {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 constexpr UINT k_FrameCount  = 3;  // Triple buffering
@@ -39,13 +40,12 @@ public:
     ~DX12Renderer() override;
 
     // RendererBase interface
-    bool initialize(void* windowHandle, int width, int height) override;
+    bool init(void* nativeWindowHandle, const RendererConfig& cfg) override;
     void shutdown() override;
-    bool renderFrame(const VideoFrame& frame) override;
+    void renderFrame(video::VideoFramePtr frame) override;
     void resize(int width, int height) override;
-    void setHDRMode(bool enabled) override;
-    std::string name() const override { return "DirectX 12"; }
-    RendererBackend backend() const override { return RendererBackend::DX12; }
+    void setHDRMetadata(float maxLuminance, float minLuminance) override;
+    void present() override;
 
     // DX12-specific
     ID3D12Device*       device()       const { return m_device.Get(); }
@@ -126,6 +126,6 @@ private:
     bool  m_initialized = false;
 };
 
-} // namespace aurora::core
+} // namespace aurora::renderer
 
 #endif // _WIN32

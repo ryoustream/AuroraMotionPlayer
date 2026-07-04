@@ -385,41 +385,35 @@ jobs:
 
       - name: CMake · Configure (Qt6 desktop, S6 modules)
         run: |
-          # Locate Qt6_DIR — apt installs to /usr/lib/<arch>/cmake/Qt6 on ubuntu
-          ARCH=$(uname -m | sed 's/x86_64/x86_64-linux-gnu/;s/aarch64/aarch64-linux-gnu/')
-          QT6_DIR_CANDIDATES=(
-            "/usr/lib/${ARCH}/cmake/Qt6"
-            "/usr/lib/x86_64-linux-gnu/cmake/Qt6"
-            "/usr/lib/cmake/Qt6"
-          )
+          # Locate Qt6_DIR using candidate list (safe for set -e)
+          ARCH=$(uname -m | sed 's/x86_64/x86_64-linux-gnu/;s/aarch64/aarch64-linux-gnu/' || echo "x86_64-linux-gnu")
           QT6_DIR=""
-          for d in "${QT6_DIR_CANDIDATES[@]}"; do
+          for d in "/usr/lib/${ARCH}/cmake/Qt6" "/usr/lib/x86_64-linux-gnu/cmake/Qt6" "/usr/lib/cmake/Qt6"; do
             if [ -f "${d}/Qt6Config.cmake" ]; then QT6_DIR="$d"; break; fi
           done
-          # Fallback: use find with -print -quit
           if [ -z "$QT6_DIR" ]; then
-            QT6_CMAKE=$(find /usr/lib -maxdepth 6 -name "Qt6Config.cmake" 2>/dev/null -print -quit)
-            [ -n "$QT6_CMAKE" ] && QT6_DIR=$(dirname "$QT6_CMAKE")
+            QT6_CMAKE=$(find /usr/lib -maxdepth 6 -name "Qt6Config.cmake" 2>/dev/null -print -quit || true)
+            if [ -n "$QT6_CMAKE" ]; then QT6_DIR=$(dirname "$QT6_CMAKE"); fi
           fi
           echo "Qt6_DIR=${QT6_DIR:-NOT_FOUND}"
 
-          CMAKE_ARGS=(-B build-s6 -G Ninja
-            -DCMAKE_BUILD_TYPE=Debug
-            -DAURORA_BUILD_DESKTOP=ON
-            -DAURORA_BUILD_TESTS=OFF
-            -DAURORA_USE_VULKAN=OFF
-            -DAURORA_NCNN=OFF
-            -DAURORA_ONNX=OFF
-          )
-          [ -n "$QT6_DIR" ] && CMAKE_ARGS+=("-DQt6_DIR=${QT6_DIR}")
-
-          cmake "${CMAKE_ARGS[@]}" 2>&1 | tee /tmp/cmake-s6.log
+          # Build cmake args (use if/fi to avoid set -e trap with [ ] && )
+          cmake -B build-s6 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            ${QT6_DIR:+-DQt6_DIR="$QT6_DIR"} \
+            -DAURORA_BUILD_DESKTOP=ON \
+            -DAURORA_BUILD_TESTS=OFF \
+            -DAURORA_USE_VULKAN=OFF \
+            -DAURORA_NCNN=OFF \
+            -DAURORA_ONNX=OFF \
+            2>&1 | tee /tmp/cmake-s6.log
           CMAKE_EXIT=${PIPESTATUS[0]}
-          if [ $CMAKE_EXIT -ne 0 ]; then
-            tac /tmp/cmake-s6.log 2>/dev/null | head -20 | tac | while IFS= read -r line; do
+          if [ "$CMAKE_EXIT" -ne 0 ]; then
+            # Emit last 10 lines (these contain the actual error, GitHub shows max 10)
+            tail -10 /tmp/cmake-s6.log | while IFS= read -r line; do
               echo "::error::$line"
             done
-            exit $CMAKE_EXIT
+            exit "$CMAKE_EXIT"
           fi
       - name: Build · S6 Windows UI targets
         continue-on-error: true

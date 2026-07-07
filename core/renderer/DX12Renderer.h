@@ -42,7 +42,7 @@ public:
     // RendererBase interface
     bool init(void* nativeWindowHandle, const RendererConfig& cfg) override;
     void shutdown() override;
-    void renderFrame(video::VideoFramePtr frame) override;
+    void renderFrame(aurora::video::VideoFramePtr frame) override;
     void resize(int width, int height) override;
     void setHDRMetadata(float maxLuminance, float minLuminance) override;
     void present() override;

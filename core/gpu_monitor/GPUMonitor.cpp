@@ -13,6 +13,7 @@
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
+#  include <winternl.h>   // NTSTATUS
 // D3DKMT types (available without d3d12.h)
 typedef UINT D3DKMT_HANDLE;
 typedef LONGLONG D3DKMT_ALIGN64;
@@ -32,8 +33,9 @@ struct D3DKMT_SEGMENTSIZEINFO {
     ULONGLONG SharedSystemMemorySize;
 };
 enum KMTQUERYADAPTERINFOTYPE { KMTQAITYPE_GETSEGMENTSIZE = 3 };
-typedef NTSTATUS (WINAPI* PFN_D3DKMTOpenAdapterFromLuid)(D3DKMT_OPENADAPTERFROMLUID*);
-typedef NTSTATUS (WINAPI* PFN_D3DKMTQueryAdapterInfo)(D3DKMT_QUERYADAPTERINFO*);
+// Use LONG (= NTSTATUS compatible) to avoid winternl.h conflicts
+typedef LONG (WINAPI* PFN_D3DKMTOpenAdapterFromLuid)(D3DKMT_OPENADAPTERFROMLUID*);
+typedef LONG (WINAPI* PFN_D3DKMTQueryAdapterInfo)(D3DKMT_QUERYADAPTERINFO*);
 
 // DXGI for adapter enumeration
 #  include <dxgi1_4.h>

@@ -166,19 +166,44 @@ jobs:
       # 4. DEPENDENCIES (vcpkg)
       # ─────────────────────────────────────────────────────────────────────
       - name: "④ Install FFmpeg (pre-built gyan.dev)"
+        shell: pwsh
         run: |
           # Use Gyan.dev pre-built FFmpeg shared build — avoids vcpkg Python dependency
           $ffmpegVer = "7.1"
           $ffmpegZip = "$env:TEMP\ffmpeg-shared.zip"
           $ffmpegDir = "$env:GITHUB_WORKSPACE\ffmpeg-shared"
+          # Gyan.dev release URL — try "full_build-shared" variant
           $url = "https://github.com/GyanD/codexffmpeg/releases/download/$ffmpegVer/ffmpeg-$ffmpegVer-full_build-shared.zip"
 
-          Write-Host "Downloading FFmpeg $ffmpegVer pre-built shared..."
-          Invoke-WebRequest -Uri $url -OutFile $ffmpegZip -TimeoutSec 300
+          Write-Host "Downloading FFmpeg $ffmpegVer from $url"
+          try {
+            Invoke-WebRequest -Uri $url -OutFile $ffmpegZip -TimeoutSec 300
+          } catch {
+            Write-Host "::warning::Download failed ($($_.Exception.Message)), trying alternate URL..."
+            $url2 = "https://github.com/GyanD/codexffmpeg/releases/download/$ffmpegVer/ffmpeg-$ffmpegVer-essentials_build.zip"
+            Invoke-WebRequest -Uri $url2 -OutFile $ffmpegZip -TimeoutSec 300
+          }
           Expand-Archive -Path $ffmpegZip -DestinationPath $env:GITHUB_WORKSPACE -Force
 
-          $extracted = Get-ChildItem "$env:GITHUB_WORKSPACE" -Directory -Filter "ffmpeg-$ffmpegVer*" | Select-Object -First 1
-          Rename-Item $extracted.FullName $ffmpegDir -ErrorAction SilentlyContinue
+          # The extracted dir may be named "ffmpeg-7.1-full_build-shared" or similar
+          $extracted = Get-ChildItem "$env:GITHUB_WORKSPACE" -Directory | 
+            Where-Object { $_.Name -like "ffmpeg-$ffmpegVer*" -and $_.FullName -ne $ffmpegDir } |
+            Sort-Object Name -Descending | Select-Object -First 1
+          
+          if ($extracted) {
+            if (Test-Path $ffmpegDir) { Remove-Item $ffmpegDir -Recurse -Force }
+            Rename-Item $extracted.FullName $ffmpegDir
+          } elseif (-not (Test-Path $ffmpegDir)) {
+            Write-Host "::error::Could not find extracted FFmpeg directory"
+            Get-ChildItem "$env:GITHUB_WORKSPACE" -Directory | ForEach-Object { Write-Host "  Found: $_" }
+            exit 1
+          }
+
+          # Verify include/lib dirs exist
+          $incDir = "$ffmpegDir\include"
+          $libDir = "$ffmpegDir\lib"
+          Write-Host "Include dir: $incDir (exists=$((Test-Path $incDir)))"
+          Write-Host "Lib dir:     $libDir (exists=$((Test-Path $libDir)))"
 
           echo "FFMPEG_PREFIX=$ffmpegDir" >> $env:GITHUB_ENV
           echo "$ffmpegDir\bin" >> $env:GITHUB_PATH

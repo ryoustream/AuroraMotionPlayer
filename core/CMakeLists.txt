@@ -97,7 +97,12 @@ target_compile_features(aurora_core PUBLIC cxx_std_20)
 
 # Link FFmpeg
 if(FFMPEG_FOUND)
-    target_link_libraries(aurora_core PUBLIC PkgConfig::FFMPEG)
+    if(TARGET PkgConfig::FFMPEG)
+        target_link_libraries(aurora_core PUBLIC PkgConfig::FFMPEG)
+    elseif(TARGET FFmpeg::FFmpeg)
+        target_link_libraries(aurora_core PUBLIC FFmpeg::FFmpeg)
+    endif()
+    target_compile_definitions(aurora_core PUBLIC AURORA_HAS_FFMPEG=1)
 elseif(AVCODEC_LIB)
     target_link_libraries(aurora_core PUBLIC
         ${AVCODEC_LIB} ${AVFORMAT_LIB}

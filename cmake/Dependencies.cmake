@@ -17,12 +17,33 @@ if(PkgConfig_FOUND)
 endif()
 
 if(NOT FFMPEG_FOUND)
-    message(STATUS "FFmpeg not found via pkg-config, using vcpkg or system paths")
-    find_library(AVCODEC_LIB  avcodec  HINTS ${FFMPEG_PREFIX}/lib)
-    find_library(AVFORMAT_LIB avformat HINTS ${FFMPEG_PREFIX}/lib)
-    find_library(AVUTIL_LIB   avutil   HINTS ${FFMPEG_PREFIX}/lib)
-    find_library(SWSCALE_LIB  swscale  HINTS ${FFMPEG_PREFIX}/lib)
+    message(STATUS "FFmpeg not found via pkg-config — trying FFMPEG_PREFIX=${FFMPEG_PREFIX}")
+    find_library(AVCODEC_LIB    avcodec    HINTS ${FFMPEG_PREFIX}/lib)
+    find_library(AVFORMAT_LIB   avformat   HINTS ${FFMPEG_PREFIX}/lib)
+    find_library(AVUTIL_LIB     avutil     HINTS ${FFMPEG_PREFIX}/lib)
+    find_library(AVFILTER_LIB   avfilter   HINTS ${FFMPEG_PREFIX}/lib)
+    find_library(SWSCALE_LIB    swscale    HINTS ${FFMPEG_PREFIX}/lib)
     find_library(SWRESAMPLE_LIB swresample HINTS ${FFMPEG_PREFIX}/lib)
+
+    if(AVCODEC_LIB AND AVFORMAT_LIB AND AVUTIL_LIB)
+        add_library(FFmpeg::FFmpeg INTERFACE IMPORTED)
+        # Only add explicit include dir if FFMPEG_PREFIX is set and dir exists
+        if(FFMPEG_PREFIX AND EXISTS "${FFMPEG_PREFIX}/include")
+            target_include_directories(FFmpeg::FFmpeg INTERFACE "${FFMPEG_PREFIX}/include")
+        endif()
+        target_link_libraries(FFmpeg::FFmpeg INTERFACE
+            ${AVCODEC_LIB}
+            ${AVFORMAT_LIB}
+            ${AVUTIL_LIB}
+            ${SWSCALE_LIB}
+            ${SWRESAMPLE_LIB}
+            $<$<BOOL:${AVFILTER_LIB}>:${AVFILTER_LIB}>
+        )
+        set(FFMPEG_FOUND TRUE)
+        message(STATUS "FFmpeg found: AVCODEC=${AVCODEC_LIB} PREFIX=${FFMPEG_PREFIX}")
+    else()
+        message(WARNING "FFmpeg libraries not found — decoder will be stub only")
+    endif()
 endif()
 
 # ── Qt6 ──────────────────────────────────────────────────────────────────────

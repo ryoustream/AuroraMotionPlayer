@@ -431,7 +431,7 @@ bool DX12Renderer::createYUVTextures(int width, int height) {
 }
 
 // ── Render Frame ──────────────────────────────────────────────────────────────
-void DX12Renderer::renderFrame(video::VideoFramePtr framePtr) {
+void DX12Renderer::renderFrame(aurora::video::VideoFramePtr framePtr) {
     if (!m_initialized || !framePtr) return;
     const VideoFrame& frame = *framePtr;
 

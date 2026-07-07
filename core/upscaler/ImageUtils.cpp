@@ -1,6 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // ImageUtils.cpp  —  Aurora Motion Player
 // ─────────────────────────────────────────────────────────────────────────────
+// MSVC requires _USE_MATH_DEFINES before <cmath> to expose M_PI etc.
+#if defined(_MSC_VER) || defined(_WIN32)
+#  define _USE_MATH_DEFINES
+#endif
 #include "ImageUtils.h"
 #include "video/VideoFrame.h"
 #include <algorithm>

@@ -58,7 +58,10 @@ if(AURORA_BUILD_DESKTOP)
         Concurrent
         Svg
     )
-    qt_standard_project_setup()
+    # qt_standard_project_setup() requires Qt >= 6.3; guard against older distro Qt
+    if(Qt6_VERSION VERSION_GREATER_EQUAL "6.3.0")
+        qt_standard_project_setup()
+    endif()
 endif()
 
 # ── Vulkan ───────────────────────────────────────────────────────────────────

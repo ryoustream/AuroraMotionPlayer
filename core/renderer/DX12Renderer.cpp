@@ -439,7 +439,6 @@ void DX12Renderer::renderFrame(aurora::video::VideoFramePtr framePtr) {
     recordCommandList(m_frameIndex);
     submitAndPresent(m_frameIndex);
     moveToNextFrame();
-    return true;
 }
 
 void DX12Renderer::uploadYUVFrame(const VideoFrame& frame) {

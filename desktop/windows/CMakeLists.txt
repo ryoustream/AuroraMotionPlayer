@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.22)
 find_package(Qt6 REQUIRED COMPONENTS
     Core Gui Widgets Multimedia Network Concurrent Svg OpenGL
 )
-qt_standard_project_setup()
+if(Qt6_VERSION VERSION_GREATER_EQUAL "6.3.0")
+    qt_standard_project_setup()
+endif()
 
 set(AURORA_SOURCES
     # Core UI

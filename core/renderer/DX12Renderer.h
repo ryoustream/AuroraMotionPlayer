@@ -69,7 +69,7 @@ private:
     void moveToNextFrame();
 
     // ----- Per-frame rendering ----------------------------------------------
-    void uploadYUVFrame(const VideoFrame& frame);
+    void uploadYUVFrame(const aurora::video::VideoFrame& frame);
     void recordCommandList(UINT frameIdx);
     void submitAndPresent(UINT frameIdx);
 

@@ -329,8 +329,37 @@ bool DX12Renderer::createPipelineState() {
     psoDesc.RTVFormats[0]         = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.DSVFormat             = DXGI_FORMAT_D32_FLOAT;
     psoDesc.SampleDesc            = {1, 0};
-    psoDesc.RasterizerState       = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-    psoDesc.BlendState            = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    // CD3DX12 helpers not available without d3dx12.h — use raw initialization
+    D3D12_RASTERIZER_DESC rasterDesc = {};
+    rasterDesc.FillMode              = D3D12_FILL_MODE_SOLID;
+    rasterDesc.CullMode              = D3D12_CULL_MODE_BACK;
+    rasterDesc.FrontCounterClockwise = FALSE;
+    rasterDesc.DepthBias             = D3D12_DEFAULT_DEPTH_BIAS;
+    rasterDesc.DepthBiasClamp        = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+    rasterDesc.SlopeScaledDepthBias  = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+    rasterDesc.DepthClipEnable       = TRUE;
+    rasterDesc.MultisampleEnable     = FALSE;
+    rasterDesc.AntialiasedLineEnable = FALSE;
+    rasterDesc.ForcedSampleCount     = 0;
+    rasterDesc.ConservativeRaster    = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+    psoDesc.RasterizerState = rasterDesc;
+
+    D3D12_BLEND_DESC blendDesc = {};
+    blendDesc.AlphaToCoverageEnable  = FALSE;
+    blendDesc.IndependentBlendEnable = FALSE;
+    for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i) {
+        blendDesc.RenderTarget[i].BlendEnable           = FALSE;
+        blendDesc.RenderTarget[i].LogicOpEnable         = FALSE;
+        blendDesc.RenderTarget[i].SrcBlend              = D3D12_BLEND_ONE;
+        blendDesc.RenderTarget[i].DestBlend             = D3D12_BLEND_ZERO;
+        blendDesc.RenderTarget[i].BlendOp               = D3D12_BLEND_OP_ADD;
+        blendDesc.RenderTarget[i].SrcBlendAlpha         = D3D12_BLEND_ONE;
+        blendDesc.RenderTarget[i].DestBlendAlpha        = D3D12_BLEND_ZERO;
+        blendDesc.RenderTarget[i].BlendOpAlpha          = D3D12_BLEND_OP_ADD;
+        blendDesc.RenderTarget[i].LogicOp               = D3D12_LOGIC_OP_NOOP;
+        blendDesc.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+    }
+    psoDesc.BlendState = blendDesc;
     psoDesc.DepthStencilState.DepthEnable = FALSE;
 
     return SUCCEEDED(m_device->CreateGraphicsPipelineState(
@@ -433,7 +462,7 @@ bool DX12Renderer::createYUVTextures(int width, int height) {
 // ── Render Frame ──────────────────────────────────────────────────────────────
 void DX12Renderer::renderFrame(aurora::video::VideoFramePtr framePtr) {
     if (!m_initialized || !framePtr) return;
-    const VideoFrame& frame = *framePtr;
+    const aurora::video::VideoFrame& frame = *framePtr;
 
     uploadYUVFrame(frame);
     recordCommandList(m_frameIndex);
@@ -441,7 +470,7 @@ void DX12Renderer::renderFrame(aurora::video::VideoFramePtr framePtr) {
     moveToNextFrame();
 }
 
-void DX12Renderer::uploadYUVFrame(const VideoFrame& frame) {
+void DX12Renderer::uploadYUVFrame(const aurora::video::VideoFrame& frame) {
     // TODO: upload Y + UV planes to m_texY / m_texUV via upload buffer
     // Using UpdateSubresources helper or manual copy
     (void)frame;

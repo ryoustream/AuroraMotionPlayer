@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include "audio/AudioBuffer.h"
+#include "video/VideoFrame.h"
 
 namespace aurora::decoder  { class FFmpegDecoder; }
 namespace aurora::renderer { class RendererBase;  }

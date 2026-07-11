@@ -97,8 +97,8 @@ bool PlayerWidget::open(const QString& path) {
     const auto& meta = m_decoder->metadata();
     if (auto* vs = meta.primaryVideo()) {
         m_flow->init(aurora::interpolation::InterpolationConfig{
-            .sourceFPS = static_cast<float>(vs->frameRate),
             .targetFPS = 60.0f,
+            .sourceFPS = static_cast<float>(vs->frameRate),
         });
         emit durationChanged(meta.duration);
     }

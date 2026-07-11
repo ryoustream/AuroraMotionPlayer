@@ -58,7 +58,7 @@ void ThumbnailBar::rebuildSlots()
     int newSlots = qMin(static_cast<int>(kMaxSlots),
                         qMax(1, static_cast<int>(width() / 120.0)));
     m_slots = newSlots;
-    m_thumbs.assign(m_slots, QPixmap());
+    m_thumbs.clear(); m_thumbs.resize(m_slots);
 
     // Request thumbnails
     for (int i = 0; i < m_slots; ++i)

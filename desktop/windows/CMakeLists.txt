@@ -29,8 +29,13 @@ set(AURORA_SOURCES
     src/MiniModeWindow.cpp      src/MiniModeWindow.h
 )
 
+# Enable Qt MOC/RCC/UIC processing
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
 # Windows application
-qt_add_executable(AuroraPlayer WIN32
+add_executable(AuroraPlayer WIN32
     ${AURORA_SOURCES}
     resources/aurora.rc
 )

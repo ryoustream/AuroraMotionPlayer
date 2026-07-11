@@ -4,7 +4,6 @@ find_package(Qt6 REQUIRED COMPONENTS
     Core Gui Widgets Multimedia Network Concurrent Svg OpenGL
 )
 if(Qt6_VERSION VERSION_GREATER_EQUAL "6.3.0")
-    qt_standard_project_setup()
 endif()
 
 set(AURORA_SOURCES

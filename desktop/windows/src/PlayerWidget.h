@@ -2,6 +2,7 @@
 #include <QWidget>
 #include <memory>
 #include <string>
+#include "audio/AudioBuffer.h"
 
 namespace aurora::decoder  { class FFmpegDecoder; }
 namespace aurora::renderer { class RendererBase;  }

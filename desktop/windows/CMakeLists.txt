@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.22)
 
+# Must be set BEFORE find_package(Qt6...) — Qt 6.5+ auto-injects
+# qt_standard_project_setup() via CMAKE_PROJECT_INCLUDE_BEFORE otherwise,
+# which writes a stray 'version' file into CMAKE_SOURCE_DIR (MSVC then
+# tries to compile it as C++ and fails with C2059).
+set(QT_NO_STANDARD_PROJECT_SETUP ON)
+
 find_package(Qt6 REQUIRED COMPONENTS
     Core Gui Widgets Multimedia Network Concurrent Svg OpenGL
 )
-if(Qt6_VERSION VERSION_GREATER_EQUAL "6.3.0")
-endif()
 
 set(AURORA_SOURCES
     # Core UI

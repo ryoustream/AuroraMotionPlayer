@@ -48,6 +48,14 @@ endif()
 
 # ── Qt6 ──────────────────────────────────────────────────────────────────────
 if(AURORA_BUILD_DESKTOP)
+    # Qt 6.5+ automatically injects qt_standard_project_setup() via a
+    # CMAKE_PROJECT_INCLUDE_BEFORE hook set by Qt6's package config —
+    # this fires even when we never call qt_standard_project_setup() ourselves.
+    # It writes a 'version' file to CMAKE_SOURCE_DIR which MSVC's default
+    # source handling picks up and tries to compile as C++ (C2059 syntax error).
+    # QT_NO_STANDARD_PROJECT_SETUP must be set BEFORE find_package(Qt6 ...).
+    set(QT_NO_STANDARD_PROJECT_SETUP ON)
+
     find_package(Qt6 REQUIRED COMPONENTS
         Core
         Gui
@@ -58,12 +66,9 @@ if(AURORA_BUILD_DESKTOP)
         Concurrent
         Svg
     )
-    # NOTE: qt_standard_project_setup() intentionally NOT called.
-    # It writes a 'version' file to CMAKE_SOURCE_DIR which MSVC's default
-    # source-glob picks up and tries to compile as C++ (C2059 syntax error).
-    # None of its side effects (WIN32_EXECUTABLE default, i18n dirs) are
-    # required for this project since we call add_executable(... WIN32) and
-    # set CMAKE_AUTOMOC/AUTOUIC/AUTORCC explicitly in desktop/windows/CMakeLists.txt.
+    # None of qt_standard_project_setup()'s side effects (WIN32_EXECUTABLE
+    # default, i18n dirs) are required since we call add_executable(... WIN32)
+    # and set CMAKE_AUTOMOC/AUTOUIC/AUTORCC explicitly in desktop/windows/CMakeLists.txt.
 endif()
 
 # ── Vulkan ───────────────────────────────────────────────────────────────────

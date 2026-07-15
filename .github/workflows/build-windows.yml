@@ -70,8 +70,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build
-          key:          cmake-win64-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt', 'desktop/windows/CMakeLists.txt', 'cmake/**/*.cmake', 'core/**/*.h') }}-v5
-          restore-keys: cmake-win64-${{ env.BUILD_TYPE }}-
+          key: cmake-win64-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt', 'desktop/windows/CMakeLists.txt', 'core/CMakeLists.txt', 'tests/CMakeLists.txt', 'cmake/**/*.cmake', 'core/**/*.h', 'core/**/*.cpp', 'desktop/windows/src/**/*.h', 'desktop/windows/src/**/*.cpp', 'tests/**/*.cpp') }}-v7
+          # NOTE: no restore-keys fallback — a partial-prefix match would restore a
+          # stale build/ dir from an older source tree, mixing old .obj files with
+          # new ones and producing spurious LNK2005 duplicate-symbol errors.
 
       - name: "② Cache · Vulkan SDK"
         id: cache-vulkan

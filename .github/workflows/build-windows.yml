@@ -70,7 +70,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build
-          key:          cmake-win64-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt', 'desktop/windows/CMakeLists.txt', 'core/**/*.h') }}-v4
+          key:          cmake-win64-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt', 'desktop/windows/CMakeLists.txt', 'cmake/**/*.cmake', 'core/**/*.h') }}-v5
           restore-keys: cmake-win64-${{ env.BUILD_TYPE }}-
 
       - name: "② Cache · Vulkan SDK"
@@ -171,6 +171,7 @@ jobs:
           # Use Gyan.dev pre-built FFmpeg shared build — avoids vcpkg Python dependency
           $ffmpegVer = "7.1"
           $ffmpegZip = "$env:TEMP\ffmpeg-shared.zip"
+          $stagingDir = "$env:TEMP\ffmpeg-extract"
           $ffmpegDir = "$env:GITHUB_WORKSPACE\ffmpeg-shared"
           # Gyan.dev release URL — try "full_build-shared" variant
           $url = "https://github.com/GyanD/codexffmpeg/releases/download/$ffmpegVer/ffmpeg-$ffmpegVer-full_build-shared.zip"
@@ -183,21 +184,28 @@ jobs:
             $url2 = "https://github.com/GyanD/codexffmpeg/releases/download/$ffmpegVer/ffmpeg-$ffmpegVer-essentials_build.zip"
             Invoke-WebRequest -Uri $url2 -OutFile $ffmpegZip -TimeoutSec 300
           }
-          Expand-Archive -Path $ffmpegZip -DestinationPath $env:GITHUB_WORKSPACE -Force
+
+          # Extract to an ISOLATED staging dir — never extract archives directly into
+          # $GITHUB_WORKSPACE, since any loose top-level file in the zip (e.g. a
+          # 'version'/'README' text file) would land in the repo root and get swept
+          # into MSBuild's default source glob, causing 'error C2059' on non-C++ files.
+          if (Test-Path $stagingDir) { Remove-Item $stagingDir -Recurse -Force }
+          Expand-Archive -Path $ffmpegZip -DestinationPath $stagingDir -Force
 
           # The extracted dir may be named "ffmpeg-7.1-full_build-shared" or similar
-          $extracted = Get-ChildItem "$env:GITHUB_WORKSPACE" -Directory | 
-            Where-Object { $_.Name -like "ffmpeg-$ffmpegVer*" -and $_.FullName -ne $ffmpegDir } |
+          $extracted = Get-ChildItem $stagingDir -Directory |
+            Where-Object { $_.Name -like "ffmpeg-$ffmpegVer*" } |
             Sort-Object Name -Descending | Select-Object -First 1
-          
+
           if ($extracted) {
             if (Test-Path $ffmpegDir) { Remove-Item $ffmpegDir -Recurse -Force }
-            Rename-Item $extracted.FullName $ffmpegDir
+            Move-Item $extracted.FullName $ffmpegDir
           } elseif (-not (Test-Path $ffmpegDir)) {
             Write-Host "::error::Could not find extracted FFmpeg directory"
-            Get-ChildItem "$env:GITHUB_WORKSPACE" -Directory | ForEach-Object { Write-Host "  Found: $_" }
+            Get-ChildItem $stagingDir | ForEach-Object { Write-Host "  Found: $_" }
             exit 1
           }
+          Remove-Item $stagingDir -Recurse -Force -ErrorAction SilentlyContinue
 
           # Verify include/lib dirs exist
           $incDir = "$ffmpegDir\include"
@@ -210,18 +218,27 @@ jobs:
           Write-Host "✓ FFmpeg at $ffmpegDir"
 
       - name: "④ Install ONNX Runtime (pre-built)"
+        shell: pwsh
         run: |
           $onnxVer = "1.19.2"
           $onnxZip  = "$env:TEMP\onnxruntime.zip"
+          $stagingDir = "$env:TEMP\onnx-extract"
           $onnxDir  = "$env:GITHUB_WORKSPACE\onnxruntime"
           $url = "https://github.com/microsoft/onnxruntime/releases/download/v$onnxVer/onnxruntime-win-x64-$onnxVer.zip"
 
           Write-Host "Downloading ONNX Runtime $onnxVer..."
           Invoke-WebRequest -Uri $url -OutFile $onnxZip -TimeoutSec 180
-          Expand-Archive -Path $onnxZip -DestinationPath $env:GITHUB_WORKSPACE -Force
 
-          $extracted = Get-ChildItem "$env:GITHUB_WORKSPACE" -Directory -Filter "onnxruntime-win-x64*" | Select-Object -First 1
-          Rename-Item $extracted.FullName $onnxDir -ErrorAction SilentlyContinue
+          # Extract to isolated staging dir (see FFmpeg step comment above)
+          if (Test-Path $stagingDir) { Remove-Item $stagingDir -Recurse -Force }
+          Expand-Archive -Path $onnxZip -DestinationPath $stagingDir -Force
+
+          $extracted = Get-ChildItem $stagingDir -Directory -Filter "onnxruntime-win-x64*" | Select-Object -First 1
+          if ($extracted) {
+            if (Test-Path $onnxDir) { Remove-Item $onnxDir -Recurse -Force }
+            Move-Item $extracted.FullName $onnxDir
+          }
+          Remove-Item $stagingDir -Recurse -Force -ErrorAction SilentlyContinue
 
           echo "ONNXRUNTIME_ROOT=$onnxDir" >> $env:GITHUB_ENV
           Write-Host "✓ ONNX Runtime at $onnxDir"

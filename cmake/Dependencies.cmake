@@ -58,10 +58,12 @@ if(AURORA_BUILD_DESKTOP)
         Concurrent
         Svg
     )
-    # qt_standard_project_setup() requires Qt >= 6.3; guard against older distro Qt
-    if(Qt6_VERSION VERSION_GREATER_EQUAL "6.3.0")
-        qt_standard_project_setup()
-    endif()
+    # NOTE: qt_standard_project_setup() intentionally NOT called.
+    # It writes a 'version' file to CMAKE_SOURCE_DIR which MSVC's default
+    # source-glob picks up and tries to compile as C++ (C2059 syntax error).
+    # None of its side effects (WIN32_EXECUTABLE default, i18n dirs) are
+    # required for this project since we call add_executable(... WIN32) and
+    # set CMAKE_AUTOMOC/AUTOUIC/AUTORCC explicitly in desktop/windows/CMakeLists.txt.
 endif()
 
 # ── Vulkan ───────────────────────────────────────────────────────────────────

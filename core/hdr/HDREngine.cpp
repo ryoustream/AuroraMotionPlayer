@@ -56,54 +56,8 @@ float HDREngine::hlgOETF(float x) noexcept {
         return a * std::log(12.0f * x - b) + c;
 }
 
-// ── ToneMapper ────────────────────────────────────────────────────────────────
-ToneMapper::ToneMapper(ToneMappingAlgorithm algo) : m_algo(algo) {}
+// ── ToneMapper implementation moved to ToneMapper.cpp (was duplicated here) ──
 
-float ToneMapper::bt2390(float x, float srcPeak, float dstPeak) const noexcept {
-    // BT.2390 EETF (Electrical-to-Electrical Transfer Function)
-    float minLum = 0.0f;
-    float ks     = 1.5f * dstPeak - 0.5f;
-    float b      = minLum;
-
-    if (x < ks) return x;
-
-    float t = (x - ks) / (srcPeak - ks);
-    float p = t * t * (3.0f - 2.0f * t); // smoothstep
-    float e2 = ks + (1.0f - ks) * p;
-    return e2 + b * (1.0f - e2);
-}
-
-float ToneMapper::mobius(float x, float srcPeak, float dstPeak) const noexcept {
-    if (x <= dstPeak) return x;
-    float j  = 0.3f; // transition point
-    float a  = -j * j * (srcPeak - dstPeak) / (j * j - 2.0f * j * dstPeak + srcPeak * dstPeak);
-    float b  = (j * j - 2.0f * j * srcPeak + srcPeak * dstPeak) /
-               std::max(srcPeak * dstPeak - j * j, 1e-6f);
-    return (b * x + a) / (x + b);
-}
-
-float ToneMapper::aces(float x) const noexcept {
-    // ACES RRT + ODT approximation
-    float a = 2.51f, b = 0.03f, c_ = 2.43f, d = 0.59f, e = 0.14f;
-    return std::clamp((x * (a * x + b)) / (x * (c_ * x + d) + e), 0.0f, 1.0f);
-}
-
-float ToneMapper::reinhard(float x, float srcPeak, float /*dstPeak*/) const noexcept {
-    return x / (x + 1.0f) * (1.0f + x / (srcPeak * srcPeak));
-}
-
-float ToneMapper::map(float x, float srcPeak, float dstPeak) const noexcept {
-    float norm  = x / srcPeak;
-    float mapped;
-    switch (m_algo) {
-    case ToneMappingAlgorithm::BT2390:  mapped = bt2390(norm, 1.0f, dstPeak / srcPeak); break;
-    case ToneMappingAlgorithm::Mobius:  mapped = mobius(norm, 1.0f, dstPeak / srcPeak); break;
-    case ToneMappingAlgorithm::ACES:    mapped = aces(norm);                             break;
-    case ToneMappingAlgorithm::Reinhard:mapped = reinhard(norm, 1.0f, dstPeak/srcPeak); break;
-    default:                             mapped = std::min(norm, 1.0f);                  break;
-    }
-    return std::clamp(mapped, 0.0f, 1.0f);
-}
 
 // ── HDREngine ─────────────────────────────────────────────────────────────────
 HDREngine::HDREngine()

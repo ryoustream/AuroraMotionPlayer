@@ -123,8 +123,17 @@ jobs:
             2>&1 | tee /tmp/ctest.log
           CTEST_EXIT=${PIPESTATUS[0]}
           if [ $CTEST_EXIT -ne 0 ]; then
-            grep -B2 -A15 "FAILED\|Failed" /tmp/ctest.log | head -80 | while IFS= read -r line; do
-              echo "::error::$line"
+            echo "## ❌ CTest failures (exit $CTEST_EXIT)" >> $GITHUB_STEP_SUMMARY
+            # Show CTest's own failure summary line + any test marked Failed/Timeout/Exception
+            grep -E "tests passed|Failed|FAILED|Timeout|SEGV|Exception|\\*\\*\\*" /tmp/ctest.log \
+              | tail -60 >> $GITHUB_STEP_SUMMARY
+            grep -E "tests passed|\\*\\*\\*Failed|\\*\\*\\*Timeout|\\*\\*\\*Exception" /tmp/ctest.log \
+              | tail -30 | while IFS= read -r line; do
+                echo "::error::$line"
+              done
+            # Fallback: always emit the last 20 lines so we never get an empty annotation set
+            tail -20 /tmp/ctest.log | while IFS= read -r line; do
+              echo "::notice::$line"
             done
             exit $CTEST_EXIT
           fi

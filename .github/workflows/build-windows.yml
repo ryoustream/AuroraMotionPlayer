@@ -66,14 +66,12 @@ jobs:
           key:          vcpkg-win64-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}-v6
           restore-keys: vcpkg-win64-
 
-      - name: "② Cache · CMake build"
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: cmake-win64-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt', 'desktop/windows/CMakeLists.txt', 'core/CMakeLists.txt', 'tests/CMakeLists.txt', 'cmake/**/*.cmake', 'core/**/*.h', 'core/**/*.cpp', 'desktop/windows/src/**/*.h', 'desktop/windows/src/**/*.cpp', 'tests/**/*.cpp') }}-v7
-          # NOTE: no restore-keys fallback — a partial-prefix match would restore a
-          # stale build/ dir from an older source tree, mixing old .obj files with
-          # new ones and producing spurious LNK2005 duplicate-symbol errors.
+      # NOTE: 'build' directory caching removed entirely (was step "② Cache · CMake build").
+      # A cached generated .vcxproj can retain absolute-path references to source
+      # files that no longer exist in a fresh checkout (e.g. a stray file created
+      # by an earlier, now-fixed workflow bug), and MSBuild/CMake's incremental
+      # regeneration does not reliably purge those stale references. A full clean
+      # configure+build is slower but eliminates this entire class of CI flakiness.
 
       - name: "② Cache · Vulkan SDK"
         id: cache-vulkan
@@ -248,6 +246,19 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────
       # 5. CMAKE CONFIGURE
       # ─────────────────────────────────────────────────────────────────────
+      - name: "⑤ Clean build directory"
+        shell: pwsh
+        run: |
+          if (Test-Path build) {
+            Write-Host "Removing existing build/ directory for a guaranteed-clean configure"
+            Remove-Item build -Recurse -Force
+          }
+          # Also guard against any stray non-tracked files landing in the source root
+          if (Test-Path "$env:GITHUB_WORKSPACE\version") {
+            Write-Host "::warning::Found stray 'version' file at workspace root — removing"
+            Remove-Item "$env:GITHUB_WORKSPACE\version" -Force
+          }
+
       - name: "⑤ CMake · Configure"
         shell: pwsh
         run: |

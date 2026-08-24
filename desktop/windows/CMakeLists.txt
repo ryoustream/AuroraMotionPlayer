@@ -44,6 +44,20 @@ add_executable(AuroraPlayer WIN32
     resources/aurora.rc
 )
 
+# Belt-and-suspenders: Qt6's CMake integration can write/attach a stray
+# 'version' file into CMAKE_SOURCE_DIR via a call deferred to the end of
+# configuration, even with QT_NO_STANDARD_PROJECT_SETUP set. If that happens,
+# mark it HEADER_FILE_ONLY so Visual Studio lists it without compiling it —
+# this works regardless of *why* or *when* the file gets attached as a source.
+if(EXISTS "${CMAKE_SOURCE_DIR}/version")
+    set_source_files_properties("${CMAKE_SOURCE_DIR}/version" PROPERTIES
+        HEADER_FILE_ONLY TRUE
+    )
+endif()
+cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL
+    set_source_files_properties "${CMAKE_SOURCE_DIR}/version" PROPERTIES HEADER_FILE_ONLY TRUE
+)
+
 target_include_directories(AuroraPlayer PRIVATE
     src
     ${CMAKE_SOURCE_DIR}/core

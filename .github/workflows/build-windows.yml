@@ -305,22 +305,43 @@ jobs:
       - name: "⑥ CMake · Build"
         shell: pwsh
         run: |
-          $output = cmake --build build `
+          $logFile = "build-msvc.log"
+          cmake --build build `
             --config $env:BUILD_TYPE `
             --parallel $env:NUMBER_OF_PROCESSORS `
-            -- /verbosity:normal /nologo /p:WarningLevel=2 2>&1
-          Write-Host $output
-          if ($LASTEXITCODE -ne 0) {
-            # Emit error lines as annotations (MSVC errors contain 'error C' or 'error LNK')
-            $errors = $output | Where-Object { $_ -match 'error C\d|error LNK\d|FAILED|fatal error' }
-            if ($errors) {
-              $errors | Select-Object -Last 30 | ForEach-Object { Write-Host "::error::$_" }
+            -- /verbosity:normal /nologo /p:WarningLevel=2 2>&1 |
+            Tee-Object -FilePath $logFile
+          $buildExit = $LASTEXITCODE
+
+          if ($buildExit -ne 0) {
+            $allLines = Get-Content $logFile
+
+            # Priority 1: actual compiler/linker error lines (most specific)
+            $realErrors = $allLines | Where-Object { $_ -match '\): error (C|LNK)\d+:' }
+            # Priority 2: any other 'error' mentions not already matched
+            $otherErrors = $allLines | Where-Object { $_ -match '\berror\b' -and $_ -notmatch '\): error (C|LNK)\d+:' }
+
+            if ($realErrors) {
+              Write-Host "===== Compiler/Linker errors ====="
+              $realErrors | Select-Object -First 30 | ForEach-Object { Write-Host "::error::$_" }
+            } elseif ($otherErrors) {
+              Write-Host "===== Other error lines ====="
+              $otherErrors | Select-Object -First 30 | ForEach-Object { Write-Host "::error::$_" }
             } else {
-              # Emit last 30 lines if no specific pattern matched
-              ($output | Select-Object -Last 30) | ForEach-Object { Write-Host "::error::$_" }
+              Write-Host "===== No 'error' pattern matched — last 40 log lines ====="
+              ($allLines | Select-Object -Last 40) | ForEach-Object { Write-Host "::error::$_" }
             }
-            exit $LASTEXITCODE
+            exit $buildExit
           }
+
+      - name: "Upload build log (always)"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build-log
+          path: build-msvc.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       # ─────────────────────────────────────────────────────────────────────
       # 7. TEST

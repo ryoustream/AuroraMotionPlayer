@@ -119,7 +119,15 @@ jobs:
           cd build-ci
           ctest --output-on-failure --timeout 60 -j4 \
             --test-output-size-passed 0 \
-            --test-output-size-failed 65536
+            --test-output-size-failed 65536 \
+            2>&1 | tee /tmp/ctest.log
+          CTEST_EXIT=${PIPESTATUS[0]}
+          if [ $CTEST_EXIT -ne 0 ]; then
+            grep -B2 -A15 "FAILED\|Failed" /tmp/ctest.log | head -80 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit $CTEST_EXIT
+          fi
 
       - name: Coverage · Generate report
         run: |
